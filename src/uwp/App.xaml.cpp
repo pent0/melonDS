@@ -53,6 +53,12 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
 		m_directXPage = ref new DirectXPage();
 	}
 
+    // Create the main page
+    if (m_mainPage == nullptr)
+    {
+        m_mainPage = ref new MainPage();
+    }
+
 	if (e->PreviousExecutionState == ApplicationExecutionState::Terminated)
 	{
 		m_directXPage->LoadInternalState(ApplicationData::Current->LocalSettings->Values);
@@ -67,16 +73,11 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
 		// Create a Frame to act as the navigation context and associate it with
 		// a SuspensionManager key
 		rootFrame = ref new Frame();
-
 		rootFrame->NavigationFailed += ref new Windows::UI::Xaml::Navigation::NavigationFailedEventHandler(this, &App::OnNavigationFailed);
 
-		if (rootFrame->Content == nullptr)
-		{
-			// When the navigation stack isn't restored navigate to the first page,
-			// configuring the new page by passing required information as a navigation
-			// parameter
-			rootFrame->Navigate(TypeName(DirectXPage::typeid), e->Arguments);
-		}
+        // Always set MainPage as the default page
+		rootFrame->Navigate(TypeName(MainPage::typeid), e->Arguments);
+
 		// Place the frame in the current Window
 		Window::Current->Content = rootFrame;
 		// Ensure the current window is active

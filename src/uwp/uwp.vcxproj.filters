@@ -137,5 +137,6 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="DirectXPage.xaml" />
+    <Page Include="MainPage.xaml" />
   </ItemGroup>
 </Project>

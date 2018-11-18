@@ -230,6 +230,9 @@
       <DependentUpon>App.xaml</DependentUpon>
     </ClInclude>
     <ClInclude Include="Common\DeviceResources.h" />
+    <ClInclude Include="MainPage.xaml.h">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </ClInclude>
     <ClInclude Include="uwpMain.h" />
     <ClInclude Include="DirectXPage.xaml.h">
       <DependentUpon>DirectXPage.xaml</DependentUpon>
@@ -266,6 +269,9 @@
       <DependentUpon>App.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="Common\DeviceResources.cpp" />
+    <ClCompile Include="MainPage.xaml.cpp">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </ClCompile>
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="uwpMain.cpp" />
     <ClCompile Include="DirectXPage.xaml.cpp">
@@ -301,6 +307,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="DirectXPage.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="MainPage.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
