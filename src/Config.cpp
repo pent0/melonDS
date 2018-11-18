@@ -21,8 +21,10 @@
 #include <stdlib.h>
 #include "Config.h"
 #include <string>
-#ifdef _WIN32
+#ifdef WINAPI_FAMILY
+#if (WINAPI_FAMILY != WINAPI_FAMILY_APP)
 #define NTDDI_VERSION		0x06000000 // GROSS FUCKING HACK
+#endif
 #include <windows.h>
 //#include <knownfolders.h> // FUCK THAT SHIT
 extern "C" const GUID DECLSPEC_SELECTANY FOLDERID_RoamingAppData = {0x3eb685db, 0x65f9, 0x4cf6, {0xa0, 0x3a, 0xe3, 0xef, 0x65, 0x72, 0x9f, 0x3d}};
@@ -121,9 +123,11 @@ FILE* GetConfigFile(const char* fileName, const char* permissions)
     FILE* f;
 
     // First check application directory
+    // UWP app just better use local storage for storing ini file
     f = fopen(fileName, permissions);
     if (f) return f;
-#ifdef _WIN32
+#if defined(_WIN32)
+#if (WINAPI_FAMILY != WINAPI_FAMILY_APP) 
     // Now check AppData
     PWSTR appDataPath = NULL;
     SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &appDataPath);
@@ -157,6 +161,7 @@ FILE* GetConfigFile(const char* fileName, const char* permissions)
     CoTaskMemFree(appDataPath);
     delete[] wfileName;
     if (f) return f;
+#endif
 #else
     // Now check XDG_CONFIG_HOME
     // TODO: check for memory leak there

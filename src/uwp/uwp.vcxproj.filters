@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>41ec5ae3-8bf5-45be-a7aa-68a4de201bbc</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets">
+      <UniqueIdentifier>01528b3c-8ceb-4a6a-9dad-5804492b8b68</UniqueIdentifier>
+      <Extensions>bmp;fbx;gif;jpg;jpeg;tga;tiff;tif;png</Extensions>
+    </Filter>
+    <Filter Include="Content">
+      <UniqueIdentifier>a0caf6f4-c91b-44ab-9460-75d3ae9eb195</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="Common\DirectXHelper.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\StepTimer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DeviceResources.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClCompile Include="Common\DeviceResources.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClInclude Include="Content\Sample3DSceneRenderer.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\SampleFpsTextRenderer.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\ShaderStructures.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClCompile Include="Content\Sample3DSceneRenderer.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\SampleFpsTextRenderer.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <FxCompile Include="Content\SamplePixelShader.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\SampleVertexShader.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <Image Include="Assets\LockScreenLogo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\SplashScreen.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square150x150Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square44x44Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png">
+      <Filter>Assets</Filter>
+    </Image>
+    <Image Include="Assets\Wide310x150Logo.scale-200.png">
+      <Filter>Assets</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="App.xaml.cpp" />
+    <ClCompile Include="uwpMain.cpp" />
+    <ClCompile Include="DirectXPage.xaml.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="..\ARM.cpp" />
+    <ClCompile Include="..\ARMInterpreter.cpp" />
+    <ClCompile Include="..\ARMInterpreter_ALU.cpp" />
+    <ClCompile Include="..\ARMInterpreter_Branch.cpp" />
+    <ClCompile Include="..\ARMInterpreter_LoadStore.cpp" />
+    <ClCompile Include="..\Config.cpp" />
+    <ClCompile Include="..\CP15.cpp" />
+    <ClCompile Include="..\DMA.cpp" />
+    <ClCompile Include="..\GPU.cpp" />
+    <ClCompile Include="..\GPU2D.cpp" />
+    <ClCompile Include="..\GPU3D.cpp" />
+    <ClCompile Include="..\GPU3D_Soft.cpp" />
+    <ClCompile Include="..\NDS.cpp" />
+    <ClCompile Include="..\NDSCart.cpp" />
+    <ClCompile Include="..\RTC.cpp" />
+    <ClCompile Include="..\Savestate.cpp" />
+    <ClCompile Include="..\SPI.cpp" />
+    <ClCompile Include="..\SPU.cpp" />
+    <ClCompile Include="..\Wifi.cpp" />
+    <ClCompile Include="..\WifiAP.cpp" />
+    <ClCompile Include="Platform.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="App.xaml.h" />
+    <ClInclude Include="uwpMain.h" />
+    <ClInclude Include="DirectXPage.xaml.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="..\ARM.h" />
+    <ClInclude Include="..\ARM_InstrTable.h" />
+    <ClInclude Include="..\ARMInterpreter.h" />
+    <ClInclude Include="..\ARMInterpreter_ALU.h" />
+    <ClInclude Include="..\ARMInterpreter_Branch.h" />
+    <ClInclude Include="..\ARMInterpreter_LoadStore.h" />
+    <ClInclude Include="..\Config.h" />
+    <ClInclude Include="..\CP15.h" />
+    <ClInclude Include="..\DMA.h" />
+    <ClInclude Include="..\FIFO.h" />
+    <ClInclude Include="..\GPU.h" />
+    <ClInclude Include="..\GPU2D.h" />
+    <ClInclude Include="..\GPU3D.h" />
+    <ClInclude Include="..\melon_fopen.h" />
+    <ClInclude Include="..\NDS.h" />
+    <ClInclude Include="..\NDSCart.h" />
+    <ClInclude Include="..\Platform.h" />
+    <ClInclude Include="..\RTC.h" />
+    <ClInclude Include="..\Savestate.h" />
+    <ClInclude Include="..\SPI.h" />
+    <ClInclude Include="..\SPU.h" />
+    <ClInclude Include="..\types.h" />
+    <ClInclude Include="..\version.h" />
+    <ClInclude Include="..\Wifi.h" />
+    <ClInclude Include="..\WifiAP.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\StoreLogo.png">
+      <Filter>Assets</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="uwp_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="DirectXPage.xaml" />
+  </ItemGroup>
+</Project>
