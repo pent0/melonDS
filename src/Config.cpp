@@ -33,6 +33,10 @@ extern "C" const GUID DECLSPEC_SELECTANY FOLDERID_RoamingAppData = {0x3eb685db, 
 #include <glib.h>
 #endif
 
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+#include "Common/Utility.h"
+#endif
+
 
 namespace Config
 {
@@ -126,6 +130,7 @@ FILE* GetConfigFile(const char* fileName, const char* permissions)
     // UWP app just better use local storage for storing ini file
     f = fopen(fileName, permissions);
     if (f) return f;
+
 #if defined(_WIN32)
 #if (WINAPI_FAMILY != WINAPI_FAMILY_APP) 
     // Now check AppData
@@ -160,6 +165,16 @@ FILE* GetConfigFile(const char* fileName, const char* permissions)
     f = _wfopen(appDataPath, fatperm);
     CoTaskMemFree(appDataPath);
     delete[] wfileName;
+    if (f) return f;
+#else
+    Platform::String^ localFolder = Windows::Storage::ApplicationData::Current->LocalFolder->Path;
+    Platform::String ^fileNameForLocal = uwp::CharToString(fileName);
+
+    localFolder += fileNameForLocal;
+    const wchar_t *localFolderPathRaw = localFolder->Data();
+
+    f = _wfopen(localFolderPathRaw, L"wb");
+
     if (f) return f;
 #endif
 #else

@@ -133,7 +133,16 @@ void Reset()
     if (f) fclose(f);
     else
     {
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+        Platform::String^ localFolder = Windows::Storage::ApplicationData::Current->LocalFolder->Path;
+        localFolder += "\\firmware.bin.bak";
+        const wchar_t *localFolderPathRaw = localFolder->Data();
+
+        f = _wfopen(localFolderPathRaw, L"wb");
+#else
         f = fopen(firmbkp, "wb");
+#endif
+
         fwrite(Firmware, 1, FirmwareLength, f);
         fclose(f);
     }

@@ -125,6 +125,9 @@
     <ClInclude Include="Content\EmulatorRenderer.h">
       <Filter>Content</Filter>
     </ClInclude>
+    <ClInclude Include="Utility.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">
@@ -136,7 +139,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="uwp_TemporaryKey.pfx" />
-    <None Include="Assets\firmware.bin" />
+    <None Include="..\..\..\..\..\..\Users\fewds\Downloads\basic-first-game.nds" />
+    <None Include="..\..\..\..\..\MelonDS\bios7.bin" />
+    <None Include="..\..\..\..\..\MelonDS\bios9.bin" />
+    <None Include="..\..\..\..\..\MelonDS\firmware.bin" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="DirectXPage.xaml" />
