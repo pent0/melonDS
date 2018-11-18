@@ -18,6 +18,8 @@ namespace uwp
 	{
 	public:
 		App();
+        virtual ~App();
+
 		virtual void OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEventArgs^ e) override;
 
 	private:
@@ -26,6 +28,8 @@ namespace uwp
 		void OnNavigationFailed(Platform::Object ^sender, Windows::UI::Xaml::Navigation::NavigationFailedEventArgs ^e);
 
         void OnMainPageDisabled(Platform::Object ^sender);
+        void OnOrientationChanged(Windows::Graphics::Display::DisplayInformation ^sender,
+            Platform::Object ^e);
 
 		DirectXPage^ m_directXPage;
         MainPage ^m_mainPage;

@@ -4,6 +4,8 @@
 #include "ShaderStructures.h"
 #include "..\Common\StepTimer.h"
 
+//#include <SpriteBatch.h>
+
 namespace uwp
 {
 	// This sample renderer instantiates a basic rendering pipeline.
@@ -37,6 +39,8 @@ namespace uwp
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer;
+
+        //std::unique_ptr<DirectX::SpriteBatch> batch;
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer	m_constantBufferData;

@@ -6,6 +6,9 @@
 #include "pch.h"
 #include "DirectXPage.xaml.h"
 
+#include <NDS.h>
+#include <Config.h>
+
 using namespace uwp;
 
 using namespace Platform;
@@ -22,6 +25,8 @@ using namespace Windows::UI::Xaml::Input;
 using namespace Windows::UI::Xaml::Interop;
 using namespace Windows::UI::Xaml::Media;
 using namespace Windows::UI::Xaml::Navigation;
+using namespace Windows::Devices::Sensors;
+using namespace Windows::Graphics::Display;
 
 /// <summary>
 /// Initializes the singleton application object.  This is the first line of authored code
@@ -34,6 +39,12 @@ App::App()
 	Resuming += ref new EventHandler<Object^>(this, &App::OnResuming);
 }
 
+App::~App()
+{
+    // Deinitialize all NDS resource
+    NDS::DeInit();
+}
+
 /// <summary>
 /// Invoked when the application is launched normally by the end user.  Other entry points
 /// will be used when the application is launched to open a specific file, to display
@@ -42,6 +53,12 @@ App::App()
 /// <param name="e">Details about the launch request and process.</param>
 void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEventArgs^ e)
 {
+    // Initialize NDS instance
+    NDS::Init();
+    const char *sram_file = "temp.sram";
+
+    bool res = NDS::LoadROM("basic-first-game.nds", sram_file, true);
+
 #if _DEBUG
 	if (IsDebuggerPresent())
 	{
@@ -98,6 +115,12 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
 		// Ensure the current window is active
 		Window::Current->Activate();
 	}
+
+    Windows::Graphics::Display::DisplayInformation ^displayInfo =
+        Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
+
+    displayInfo->OrientationChanged += ref new TypedEventHandler<DisplayInformation^, Object^>(
+        this, &App::OnOrientationChanged);
 }
 
 /// <summary>
@@ -145,4 +168,28 @@ void App::OnMainPageDisabled(Platform::Object ^sender)
 {
     auto rootFrame = dynamic_cast<Frame^>(Window::Current->Content);
     rootFrame->Navigate(TypeName(DirectXPage::typeid));
+}
+
+void App::OnOrientationChanged(Windows::Graphics::Display::DisplayInformation ^sender,
+    Platform::Object ^e)
+{
+    switch (sender->CurrentOrientation)
+    {
+    case DisplayOrientations::Landscape:
+    case DisplayOrientations::LandscapeFlipped:
+    {
+        Config::ScreenLayout = 2;
+        break;
+    }
+
+    case DisplayOrientations::Portrait:
+    case DisplayOrientations::PortraitFlipped:
+    {
+        Config::ScreenLayout = 0;
+        break;
+    }
+
+    default:
+        break;
+    }
 }
