@@ -182,11 +182,6 @@ void EmulatorRenderer::Render()
 
 void EmulatorRenderer::CreateDeviceDependentResources()
 {
-    D3D11_SUBRESOURCE_DATA initData{};
-    initData.pSysMem = nullptr;
-    initData.SysMemPitch = 192;
-    initData.SysMemSlicePitch = 256 * 192;
-
     D3D11_TEXTURE2D_DESC screentexDes;
     screentexDes.Width = 256;
     screentexDes.Height = 192;
@@ -195,11 +190,15 @@ void EmulatorRenderer::CreateDeviceDependentResources()
     screentexDes.MipLevels = 1;
     screentexDes.Usage = D3D11_USAGE_DYNAMIC;
     screentexDes.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    screentexDes.ArraySize = 1;
+    screentexDes.MiscFlags = 0;
+    screentexDes.SampleDesc.Count = 1;
+    screentexDes.SampleDesc.Quality = 0;
 
     auto device = m_deviceResources->GetD3DDevice();
 
-    device->CreateTexture2D(&screentexDes, &initData, &m_screen1Texture);
-    device->CreateTexture2D(&screentexDes, &initData, &m_screen2Texture);
+    device->CreateTexture2D(&screentexDes, NULL, &m_screen1Texture);
+    device->CreateTexture2D(&screentexDes, NULL, &m_screen2Texture);
 
     auto context = m_deviceResources->GetD3DDeviceContext();
 
