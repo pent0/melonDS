@@ -9,10 +9,6 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
   <SwapChainPanel x:Name="swapChainPanel">
-    <TextBlock Text="Hello from XAML!"
-               HorizontalAlignment="Right"
-               VerticalAlignment="Top"
-               FontSize="30" />
   </SwapChainPanel>
 
   <Page.BottomAppBar>

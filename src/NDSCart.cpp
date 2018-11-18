@@ -24,6 +24,9 @@
 
 #include "melon_fopen.h"
 
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
+using namespace Windows::Storage;
+#endif
 
 namespace NDSCart_SRAM
 {

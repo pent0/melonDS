@@ -25,6 +25,8 @@ namespace uwp
 		void OnResuming(Platform::Object ^sender, Platform::Object ^args);
 		void OnNavigationFailed(Platform::Object ^sender, Windows::UI::Xaml::Navigation::NavigationFailedEventArgs ^e);
 
+        void OnMainPageDisabled(Platform::Object ^sender);
+
 		DirectXPage^ m_directXPage;
         MainPage ^m_mainPage;
 	};

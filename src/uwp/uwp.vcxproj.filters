@@ -23,18 +23,12 @@
     <ClCompile Include="Common\DeviceResources.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClInclude Include="Content\Sample3DSceneRenderer.h">
-      <Filter>Content</Filter>
-    </ClInclude>
     <ClInclude Include="Content\SampleFpsTextRenderer.h">
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="Content\ShaderStructures.h">
       <Filter>Content</Filter>
     </ClInclude>
-    <ClCompile Include="Content\Sample3DSceneRenderer.cpp">
-      <Filter>Content</Filter>
-    </ClCompile>
     <ClCompile Include="Content\SampleFpsTextRenderer.cpp">
       <Filter>Content</Filter>
     </ClCompile>
@@ -92,6 +86,10 @@
     <ClCompile Include="..\Wifi.cpp" />
     <ClCompile Include="..\WifiAP.cpp" />
     <ClCompile Include="Platform.cpp" />
+    <ClCompile Include="MainPage.xaml.cpp" />
+    <ClCompile Include="Content\EmulatorRenderer.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.xaml.h" />
@@ -123,6 +121,10 @@
     <ClInclude Include="..\version.h" />
     <ClInclude Include="..\Wifi.h" />
     <ClInclude Include="..\WifiAP.h" />
+    <ClInclude Include="MainPage.xaml.h" />
+    <ClInclude Include="Content\EmulatorRenderer.h">
+      <Filter>Content</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">
@@ -134,6 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="uwp_TemporaryKey.pfx" />
+    <None Include="Assets\firmware.bin" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="DirectXPage.xaml" />

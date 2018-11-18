@@ -4,6 +4,8 @@
 
 namespace uwp
 {
+    public delegate void MainPageDisableEventHandler(Platform::Object ^sender);
+
     /// <summary>
     /// The main page
     /// </summary>
@@ -11,8 +13,11 @@ namespace uwp
     {
     protected:
         void OnHamburgerButtonClick(Platform::Object^ sender, Windows::UI::Core::PointerEventArgs^ e);
+        void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs ^e) override;
 
     public:
+        event MainPageDisableEventHandler ^Disabled;
+
         MainPage();
     };
 }

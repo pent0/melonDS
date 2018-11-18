@@ -40,6 +40,9 @@
 
 #include "../Savestate.h"
 
+#ifdef _MSC_VER
+#define strcasecmp stricmp
+#endif
 
 // savestate slot mapping
 // 1-8: regular slots (quick access)

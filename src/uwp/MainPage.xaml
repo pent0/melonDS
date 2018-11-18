@@ -11,7 +11,7 @@
     <Grid x:Name="gridMain">
         <SplitView x:Name="MainSplitView" DisplayMode="CompactOverlay"
                IsPaneOpen="False" CompactPaneLength="50"
-               OpenPaneLength="200">
+               OpenPaneLength="50">
             <SplitView.Pane>
                 <StackPanel Background="Gray">
                     <Button x:Name="HamburgerButton"
@@ -20,26 +20,22 @@
                             Width="50" Height="50"
                             Click="OnHamburgerButtonClick" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Center" />
                     <StackPanel Orientation="Horizontal">
-                        <Button x:Name="EmulationPageButton" FontFamily="Segoe MDL2 Assets"
+                        <Button x:Name="HomePageButton" FontFamily="Segoe MDL2 Assets"
                                 Content="&#xE80F;"
                                 Width="50" Height="50"
                                 Background="Transparent" />
-                        <TextBlock Text="Emulation" VerticalAlignment="Center" HorizontalAlignment="Center" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Button x:Name="SettingPageButton" FontFamily="Segoe MDL2 Assets"
                                 Content="&#xE713;"
                                 Width="50" Height="50"
                                 Background="Transparent" />
-                        <TextBlock Text="Settings" VerticalAlignment="Center" HorizontalAlignment="Center" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Button x:Name="DonatePageButton" FontFamily="Segoe MDL2 Assets"
                                 Content="&#xE719;"
                                 Width="50" Height="50"
                                 Background="Transparent" />
-                        <TextBlock x:Name="DonationPageButtonTitle" FontFamily="Segoe UI"
-                                    Text="Donate" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </StackPanel>
             </SplitView.Pane>

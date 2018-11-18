@@ -22,6 +22,7 @@ using namespace Windows::UI::Xaml::Input;
 using namespace Windows::UI::Xaml::Interop;
 using namespace Windows::UI::Xaml::Media;
 using namespace Windows::UI::Xaml::Navigation;
+
 /// <summary>
 /// Initializes the singleton application object.  This is the first line of authored code
 /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -76,7 +77,8 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
 		rootFrame->NavigationFailed += ref new Windows::UI::Xaml::Navigation::NavigationFailedEventHandler(this, &App::OnNavigationFailed);
 
         // Always set MainPage as the default page
-		rootFrame->Navigate(TypeName(MainPage::typeid), e->Arguments);
+		rootFrame->Navigate(TypeName(MainPage::typeid), ref new MainPageDisableEventHandler(this,
+            &App::OnMainPageDisabled));
 
 		// Place the frame in the current Window
 		Window::Current->Content = rootFrame;
@@ -90,7 +92,8 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
 			// When the navigation stack isn't restored navigate to the first page,
 			// configuring the new page by passing required information as a navigation
 			// parameter
-			rootFrame->Navigate(TypeName(DirectXPage::typeid), e->Arguments);
+			rootFrame->Navigate(TypeName(MainPage::typeid), ref new MainPageDisableEventHandler(this,
+                &App::OnMainPageDisabled));
 		}
 		// Ensure the current window is active
 		Window::Current->Activate();
@@ -135,3 +138,11 @@ void App::OnNavigationFailed(Platform::Object ^sender, Windows::UI::Xaml::Naviga
 	throw ref new FailureException("Failed to load Page " + e->SourcePageType.Name);
 }
 
+/// <summary>
+/// Invoked when the main page is disabled
+///
+void App::OnMainPageDisabled(Platform::Object ^sender) 
+{
+    auto rootFrame = dynamic_cast<Frame^>(Window::Current->Content);
+    rootFrame->Navigate(TypeName(DirectXPage::typeid));
+}
