@@ -182,6 +182,27 @@ void EmulatorRenderer::Render()
 
 void EmulatorRenderer::CreateDeviceDependentResources()
 {
+    D3D11_SUBRESOURCE_DATA initData{};
+    initData.pSysMem = nullptr;
+    initData.SysMemPitch = 192;
+    initData.SysMemSlicePitch = 256 * 192;
+
+    D3D11_TEXTURE2D_DESC screentexDes;
+    screentexDes.Width = 256;
+    screentexDes.Height = 192;
+    screentexDes.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    screentexDes.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    screentexDes.MipLevels = 1;
+    screentexDes.Usage = D3D11_USAGE_DYNAMIC;
+    screentexDes.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    auto device = m_deviceResources->GetD3DDevice();
+
+    device->CreateTexture2D(&screentexDes, &initData, &m_screen1Texture);
+    device->CreateTexture2D(&screentexDes, &initData, &m_screen2Texture);
+
+    auto context = m_deviceResources->GetD3DDeviceContext();
+
 	// Load shaders asynchronously.
 	auto loadVSTask = DX::ReadDataAsync(L"SampleVertexShader.cso");
 	auto loadPSTask = DX::ReadDataAsync(L"SamplePixelShader.cso");

@@ -4,7 +4,7 @@
 #include "ShaderStructures.h"
 #include "..\Common\StepTimer.h"
 
-//#include <SpriteBatch.h>
+#include <SpriteBatch.h>
 
 namespace uwp
 {
@@ -40,7 +40,12 @@ namespace uwp
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer;
 
-        //std::unique_ptr<DirectX::SpriteBatch> batch;
+        Microsoft::WRL::ComPtr<ID3D11Texture2D>     m_screen1Texture;
+        Microsoft::WRL::ComPtr<ID3D11Texture2D>     m_screen2Texture;
+
+        // Sprite batch, used for drawing control buttons and the framebuffer
+        // bitmap
+        std::unique_ptr<DirectX::SpriteBatch> batch;
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer	m_constantBufferData;
