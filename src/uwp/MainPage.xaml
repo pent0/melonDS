@@ -11,14 +11,9 @@
     <Grid x:Name="gridMain">
         <SplitView x:Name="MainSplitView" DisplayMode="CompactOverlay"
                IsPaneOpen="False" CompactPaneLength="50"
-               OpenPaneLength="50">
+               OpenPaneLength="50" PaneBackground="Gray">
             <SplitView.Pane>
-                <StackPanel Background="Gray">
-                    <Button x:Name="HamburgerButton"
-                            FontFamily="Segoe MDL2 Assets"
-                            Content="&#xE700;"
-                            Width="50" Height="50"
-                            Click="OnHamburgerButtonClick" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Center" />
+                <StackPanel Background="Gray" VerticalAlignment="Bottom">
                     <StackPanel Orientation="Horizontal">
                         <Button x:Name="HomePageButton" FontFamily="Segoe MDL2 Assets"
                                 Content="&#xE80F;"
@@ -37,6 +32,11 @@
                                 Width="50" Height="50"
                                 Background="Transparent" />
                     </StackPanel>
+                    <Button x:Name="HamburgerButton"
+                            FontFamily="Segoe MDL2 Assets"
+                            Content="&#xE700;"
+                            Width="50" Height="50"
+                            Click="OnHamburgerButtonClick" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
             </SplitView.Pane>
         </SplitView>

@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "uwp", "uwp.vcxproj", "{41EC
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectXTK", "DirectXTK\DirectXTK_Windows10_2015.vcxproj", "{F4776924-619C-42C7-88B2-82C947CCC9E7}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL2-UWP", "SDL\VisualC-WinRT\UWP_VS2015\SDL-UWP.vcxproj", "{89E9B32E-A86A-47C3-A948-D2B1622925CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -53,6 +55,20 @@ Global
 		{F4776924-619C-42C7-88B2-82C947CCC9E7}.Release|x64.Build.0 = Release|x64
 		{F4776924-619C-42C7-88B2-82C947CCC9E7}.Release|x86.ActiveCfg = Release|Win32
 		{F4776924-619C-42C7-88B2-82C947CCC9E7}.Release|x86.Build.0 = Release|Win32
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Debug|ARM.ActiveCfg = Debug|ARM
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Debug|ARM.Build.0 = Debug|ARM
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Debug|x64.ActiveCfg = Debug|x64
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Debug|x64.Build.0 = Debug|x64
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Debug|x86.ActiveCfg = Debug|Win32
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Debug|x86.Build.0 = Debug|Win32
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Release|ARM.ActiveCfg = Release|ARM
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Release|ARM.Build.0 = Release|ARM
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Release|ARM64.ActiveCfg = Release|Win32
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Release|x64.ActiveCfg = Release|x64
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Release|x64.Build.0 = Release|x64
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Release|x86.ActiveCfg = Release|Win32
+		{89E9B32E-A86A-47C3-A948-D2B1622925CE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

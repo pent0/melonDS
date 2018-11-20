@@ -11,6 +11,8 @@
 #include <NDS.h>
 #include <Config.h>
 
+#include <SDL.h>
+
 using namespace uwp;
 
 using namespace Platform;
@@ -29,6 +31,8 @@ using namespace Windows::UI::Xaml::Media;
 using namespace Windows::UI::Xaml::Navigation;
 using namespace Windows::Devices::Sensors;
 using namespace Windows::Graphics::Display;
+using namespace Windows::UI::Input;
+using namespace Windows::UI::ViewManagement;
 
 /// <summary>
 /// Initializes the singleton application object.  This is the first line of authored code
@@ -36,6 +40,13 @@ using namespace Windows::Graphics::Display;
 /// </summary>
 App::App()
 {
+    SDL_SetMainReady();
+
+    if (SDL_Init(SDL_INIT_AUDIO) < 0)
+    {
+
+    }
+
 	InitializeComponent();
 	Suspending += ref new SuspendingEventHandler(this, &App::OnSuspending);
 	Resuming += ref new EventHandler<Object^>(this, &App::OnResuming);
@@ -48,6 +59,8 @@ App::~App()
     {
         m_emulator->Shutdown();
     }
+
+    SDL_Quit();
 }
 
 /// <summary>
@@ -120,20 +133,25 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
 		Window::Current->Activate();
 	}
 
+    // Launch in fullscreen
+    if (Windows::System::Profile::AnalyticsInfo::VersionInfo->DeviceFamily == "Windows.Mobile") {
+        ApplicationView::GetForCurrentView()->TryEnterFullScreenMode();
+    }
+
     Windows::Graphics::Display::DisplayInformation ^displayInfo =
         Windows::Graphics::Display::DisplayInformation::GetForCurrentView();
 
     displayInfo->OrientationChanged += ref new TypedEventHandler<DisplayInformation^, Object^>(
         this, &App::OnOrientationChanged);
 
-    m_emulator->LoadROM("AC.nds", "temp.sram", true).then([&](task<bool> res)
-    {
-        if (res.get())
-        {
-            m_emulator->SetEmulate(true);
-            m_emulator->Start();
-        }
-    });
+    RecalculateScale();
+
+    Window::Current->SizeChanged += ref new WindowSizeChangedEventHandler(this,
+        &App::OnWindowSizeChange);
+
+    Config::Threaded3D = 1;
+
+    m_loadTask = m_emulator->LoadROM("wright.nds", "temp.sram", true);
 }
 
 /// <summary>
@@ -179,6 +197,23 @@ void App::OnNavigationFailed(Platform::Object ^sender, Windows::UI::Xaml::Naviga
 ///
 void App::OnMainPageDisabled(Platform::Object ^sender) 
 {
+    if (!m_loadTask.is_done())
+    {
+        m_loadTask.then([&](task<bool> res)
+        {
+            if (res.get())
+            {
+                m_emulator->SetEmulate(true);
+                m_emulator->Start();
+            }
+        });
+    }
+    else
+    {
+        m_emulator->SetEmulate(true);
+        m_emulator->Start();
+    }
+
     auto rootFrame = dynamic_cast<Frame^>(Window::Current->Content);
     rootFrame->Navigate(TypeName(DirectXPage::typeid), ref new EmulatorWrapper(m_emulator));
 }
@@ -192,6 +227,8 @@ void App::OnOrientationChanged(Windows::Graphics::Display::DisplayInformation ^s
     case DisplayOrientations::LandscapeFlipped:
     {
         Config::ScreenLayout = 2;
+        RecalculateScale();
+
         break;
     }
 
@@ -199,10 +236,54 @@ void App::OnOrientationChanged(Windows::Graphics::Display::DisplayInformation ^s
     case DisplayOrientations::PortraitFlipped:
     {
         Config::ScreenLayout = 0;
+        RecalculateScale();
+
         break;
     }
 
     default:
         break;
     }
+}
+
+void App::RecalculateScale()
+{
+    Vector2 scaleFactor{};
+    Vector2 screen1Pos{};
+    Vector2 screen2Pos{};
+    
+    auto bounds = ApplicationView::GetForCurrentView()->VisibleBounds;
+    auto rawScaleFactor = DisplayInformation::GetForCurrentView()->RawPixelsPerViewPixel;
+
+    float width = bounds.Width * rawScaleFactor;
+    float height = bounds.Height * rawScaleFactor;
+
+    if (Config::ScreenLayout == 2)
+    {
+        scaleFactor = Vector2{ width / 256 / 2 };
+
+        screen1Pos = { 0.0f };
+        screen2Pos = { scaleFactor.x * 256, 0.0f };
+    }
+    else if (Config::ScreenLayout == 0)
+    {
+        scaleFactor = Vector2{ height / 192 / 2 };
+
+        if (scaleFactor.y * 256 > width)
+        {
+            scaleFactor = Vector2{ width / 256 };
+        }
+
+        screen1Pos = { max((width - 256 * scaleFactor.y) / 2, 0), 0 };
+        screen2Pos = { max((width - 256 * scaleFactor.y) / 2 , 0), scaleFactor.y * 192 };
+    }
+
+    m_emulator->SetScale(scaleFactor);
+    m_emulator->SetScreen1Pos(screen1Pos);
+    m_emulator->SetScreen2Pos(screen2Pos);
+}
+
+void App::OnWindowSizeChange(Platform::Object ^sender, WindowSizeChangedEventArgs ^e)
+{
+    RecalculateScale();
 }

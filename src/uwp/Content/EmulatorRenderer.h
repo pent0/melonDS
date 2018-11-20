@@ -8,6 +8,8 @@
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
 
+using namespace Windows::Graphics::Display;
+
 namespace uwp
 {
 	// This sample renderer instantiates a basic rendering pipeline.
@@ -29,6 +31,7 @@ namespace uwp
 
 	private:
 		void UpdateScreen();
+        void OnOrientationChanged(DisplayInformation^ sender, Platform::Object^ args);
 
 	private:
 		// Cached pointer to device resources.
@@ -42,6 +45,8 @@ namespace uwp
 
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_screen1SRV;
         Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_screen2SRV;
+
+        float m_hostFPS;
 
         // Sprite batch, used for drawing control buttons and the framebuffer
         // bitmap

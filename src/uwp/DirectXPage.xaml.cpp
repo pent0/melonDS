@@ -24,6 +24,11 @@ using namespace Windows::UI::Xaml::Data;
 using namespace Windows::UI::Xaml::Input;
 using namespace Windows::UI::Xaml::Media;
 using namespace Windows::UI::Xaml::Navigation;
+using namespace Windows::Devices::Sensors;
+using namespace Windows::Graphics::Display;
+using namespace Windows::UI::Input;
+using namespace Windows::UI::ViewManagement;
+
 using namespace concurrency;
 
 DirectXPage::DirectXPage():
@@ -82,6 +87,7 @@ DirectXPage::DirectXPage():
     //const std::shared_ptr<uwp::Emulator> &emuInstance
 	// Run task on a dedicated high priority background thread.
 	m_inputLoopWorker = ThreadPool::RunAsync(workItemHandler, WorkItemPriority::High, WorkItemOptions::TimeSliced);
+    m_rawScaleFactor = DisplayInformation::GetForCurrentView()->RawPixelsPerViewPixel;
 }
 
 DirectXPage::~DirectXPage()
@@ -93,10 +99,20 @@ DirectXPage::~DirectXPage()
 
 void DirectXPage::OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs ^e)
 {
-    m_main = std::unique_ptr<uwpMain>(new uwpMain(m_deviceResources,
-        dynamic_cast<uwp::EmulatorWrapper^>(e->Parameter)->m_emu));
+    m_emulator = dynamic_cast<uwp::EmulatorWrapper^>(e->Parameter)->m_emu;
+    m_main = std::unique_ptr<uwpMain>(new uwpMain(m_deviceResources, m_emulator));
 
     m_main->StartRenderLoop();
+}
+
+void DirectXPage::OnNavigatedFrom(Windows::UI::Xaml::Navigation::NavigationEventArgs ^e)
+{
+    if (m_emulator->IsEmulating())
+    {
+        m_emulator->SetEmulate(false);
+    }
+
+    m_main->StopRenderLoop();
 }
 
 // Saves the current state of the app for suspend and terminate events.
@@ -114,6 +130,24 @@ void DirectXPage::SaveInternalState(IPropertySet^ state)
 	m_main->StopRenderLoop();
 
 	// Put code to save app state here.
+}
+
+bool DirectXPage::IsTouchScreenPressed(const Vector2 &pos, Vector2 &mappedPos)
+{
+    auto scaleVec = m_emulator->GetScale();
+    auto s2p = m_emulator->GetScreen2Pos();
+
+    Rectangle screen2Rect{ static_cast<long>(s2p.x), static_cast<long>(s2p.y), 
+        static_cast<long>(256 * scaleVec.x),
+        static_cast<long>(192 * scaleVec.y) };
+
+    if (screen2Rect.Contains(pos.x * m_rawScaleFactor, pos.y * m_rawScaleFactor))
+    {
+        mappedPos = (pos * m_rawScaleFactor - s2p) / scaleVec;
+        return true;
+    }
+
+    return false;
 }
 
 // Loads the current state of the app for resume events.
@@ -152,6 +186,11 @@ void DirectXPage::OnVisibilityChanged(CoreWindow^ sender, VisibilityChangedEvent
 
 void DirectXPage::OnDpiChanged(DisplayInformation^ sender, Object^ args)
 {
+    if (!m_main)
+    {
+        return;
+    }
+
 	critical_section::scoped_lock lock(m_main->GetCriticalSection());
 	// Note: The value for LogicalDpi retrieved here may not match the effective DPI of the app
 	// if it is being scaled for high resolution devices. Once the DPI is set on DeviceResources,
@@ -163,6 +202,11 @@ void DirectXPage::OnDpiChanged(DisplayInformation^ sender, Object^ args)
 
 void DirectXPage::OnOrientationChanged(DisplayInformation^ sender, Object^ args)
 {
+    if (!m_main)
+    {
+        return;
+    }
+
 	critical_section::scoped_lock lock(m_main->GetCriticalSection());
 	m_deviceResources->SetCurrentOrientation(sender->CurrentOrientation);
 	m_main->CreateWindowSizeDependentResources();
@@ -170,6 +214,11 @@ void DirectXPage::OnOrientationChanged(DisplayInformation^ sender, Object^ args)
 
 void DirectXPage::OnDisplayContentsInvalidated(DisplayInformation^ sender, Object^ args)
 {
+    if (!m_main)
+    {
+        return;
+    }
+
 	critical_section::scoped_lock lock(m_main->GetCriticalSection());
 	m_deviceResources->ValidateDevice();
 }
@@ -184,11 +233,30 @@ void DirectXPage::AppBarButton_Click(Object^ sender, RoutedEventArgs^ e)
 void DirectXPage::OnPointerPressed(Object^ sender, PointerEventArgs^ e)
 {
 	// When the pointer is pressed begin tracking the pointer movement.
+    Vector2 tp = { e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y };
+    Vector2 mappedPos{ 0.0f };
+
+    if (IsTouchScreenPressed(tp, mappedPos))
+    {
+        m_emulator->Touch(mappedPos);
+    }
+
 	m_main->StartTracking();
 }
 
 void DirectXPage::OnPointerMoved(Object^ sender, PointerEventArgs^ e)
 {
+    if (m_emulator->IsTouching())
+    {
+        Vector2 tp = { e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y };
+        Vector2 mappedPos{ 0.0f };
+
+        if (IsTouchScreenPressed(tp, mappedPos))
+        {
+            m_emulator->Touch(mappedPos);
+        }
+    }
+
 	// Update the pointer tracking code.
 	if (m_main->IsTracking())
 	{
@@ -198,6 +266,14 @@ void DirectXPage::OnPointerMoved(Object^ sender, PointerEventArgs^ e)
 
 void DirectXPage::OnPointerReleased(Object^ sender, PointerEventArgs^ e)
 {
+    Vector2 tp = { e->CurrentPoint->Position.X, e->CurrentPoint->Position.Y };
+    Vector2 mappedPos{ 0.0f };
+
+    if (IsTouchScreenPressed(tp, mappedPos))
+    {
+        m_emulator->ReleaseScreen();
+    }
+
 	// Stop tracking pointer movement when the pointer is released.
 	m_main->StopTracking();
 }
@@ -214,4 +290,12 @@ void DirectXPage::OnSwapChainPanelSizeChanged(Object^ sender, SizeChangedEventAr
 	critical_section::scoped_lock lock(m_main->GetCriticalSection());
 	m_deviceResources->SetLogicalSize(e->NewSize);
 	m_main->CreateWindowSizeDependentResources();
+}
+
+void DirectXPage::OnHamburgerClicked(Platform::Object ^sender, Windows::UI::Core::PointerEventArgs^ e)
+{
+    auto rootFrame = dynamic_cast<Windows::UI::Xaml::Controls::Frame^>(Window::Current->Content);
+
+    // Go back to Home
+    rootFrame->GoBack();
 }

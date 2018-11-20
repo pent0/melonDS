@@ -21,6 +21,7 @@ namespace uwp
 	{
     protected:
         void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs ^e) override;
+        void OnNavigatedFrom(Windows::UI::Xaml::Navigation::NavigationEventArgs ^e) override;
 
 	public:
 		DirectXPage();
@@ -28,6 +29,8 @@ namespace uwp
 
 		void SaveInternalState(Windows::Foundation::Collections::IPropertySet^ state);
 		void LoadInternalState(Windows::Foundation::Collections::IPropertySet^ state);
+
+        void OnHamburgerClicked(Platform::Object ^sender, Windows::UI::Core::PointerEventArgs^ e);
 
 	private:
 		// XAML low-level rendering event handler.
@@ -54,11 +57,15 @@ namespace uwp
 		void OnPointerPressed(Platform::Object^ sender, Windows::UI::Core::PointerEventArgs^ e);
 		void OnPointerMoved(Platform::Object^ sender, Windows::UI::Core::PointerEventArgs^ e);
 		void OnPointerReleased(Platform::Object^ sender, Windows::UI::Core::PointerEventArgs^ e);
+        bool IsTouchScreenPressed(const Vector2 &pos, Vector2 &mappedPos);
 
 		// Resources used to render the DirectX content in the XAML page background.
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
-		std::unique_ptr<uwpMain> m_main; 
+		std::unique_ptr<uwpMain> m_main;
+        std::shared_ptr<uwp::Emulator> m_emulator;
+
 		bool m_windowVisible;
+        double m_rawScaleFactor;
 	};
 }
 

@@ -1,3 +1,6 @@
 [submodule "src/uwp/DirectXTK"]
 	path = src/uwp/DirectXTK
 	url = https://github.com/Microsoft/DirectXTK
+[submodule "src/uwp/SDL"]
+	path = src/uwp/SDL
+	url = https://github.com/bminor/SDL

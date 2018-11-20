@@ -8,74 +8,55 @@
 #include <codecvt>
 #include <chrono>
 
+#include <SDL.h>
+
 using namespace std::chrono_literals;
 
 namespace uwp
 {
 
-class VoiceCallback : public IXAudio2VoiceCallback
+void EmulatorAudioCallback(void *userData, u8 *stream, int len)
 {
-    std::shared_ptr<uwp::Emulator> m_emu;
-public:
-    HANDLE hBufferEndEvent;
-    
-    VoiceCallback(const std::shared_ptr<uwp::Emulator> emu) : 
-        hBufferEndEvent(CreateEvent(NULL, FALSE, FALSE, NULL)),
-        m_emu(emu) 
+    // resampling:
+    // buffer length is 1024 samples
+    // which is 710 samples at the original sample rate
+
+    s16 buf_in[710 * 2];
+    s16* buf_out = (s16*)stream;
+
+    int num_in = SPU::ReadOutput(buf_in, 710);
+    int num_out = 1024;
+
+    int margin = 6;
+    if (num_in < 710 - margin)
     {
+        int last = num_in - 1;
+        if (last < 0) last = 0;
+
+        for (int i = num_in; i < 710 - margin; i++)
+            ((u32*)buf_in)[i] = ((u32*)buf_in)[last];
+
+        num_in = 710 - margin;
     }
 
-    ~VoiceCallback() { CloseHandle(hBufferEndEvent); }
+    float res_incr = num_in / (float)num_out;
+    float res_timer = 0;
+    int res_pos = 0;
 
-    //Called when the voice has just finished playing a contiguous audio stream.
-    void OnStreamEnd() { SetEvent(hBufferEndEvent); }
-
-    //Unused methods are stubs
-    void OnVoiceProcessingPassEnd() { }
-    void OnVoiceProcessingPassStart(UINT32 SamplesRequired)
+    for (int i = 0; i < 1024; i++)
     {
-        s16 buf_in[710 * 2];
-        s16* buf_out = (s16*)&m_emu->m_audioData[0];
+        // TODO: interp!!
+        buf_out[i * 2] = buf_in[res_pos * 2];
+        buf_out[i * 2 + 1] = buf_in[res_pos * 2 + 1];
 
-        int num_in = SPU::ReadOutput(buf_in, 710);
-        int num_out = 1024;
-
-        int margin = 6;
-        if (num_in < 710 - margin)
+        res_timer += res_incr;
+        while (res_timer >= 1.0)
         {
-            int last = num_in - 1;
-            if (last < 0) last = 0;
-
-            for (int i = num_in; i < 710 - margin; i++)
-                ((u32*)buf_in)[i] = ((u32*)buf_in)[last];
-
-            num_in = 710 - margin;
-        }
-
-        float res_incr = num_in / (float)num_out;
-        float res_timer = 0;
-        int res_pos = 0;
-
-        for (int i = 0; i < 1024; i++)
-        {
-            // TODO: interp!!
-            buf_out[i * 2] = buf_in[res_pos * 2];
-            buf_out[i * 2 + 1] = buf_in[res_pos * 2 + 1];
-
-            res_timer += res_incr;
-            while (res_timer >= 1.0)
-            {
-                res_timer -= 1.0;
-                res_pos++;
-            }
+            res_timer -= 1.0;
+            res_pos++;
         }
     }
-
-    void OnBufferEnd(void * pBufferContext) { }
-    void OnBufferStart(void * pBufferContext) {    }
-    void OnLoopEnd(void * pBufferContext) {    }
-    void OnVoiceError(void * pBufferContext, HRESULT Error) { }
-};
+}
 
 task<bool> Emulator::LoadROM(Platform::String ^path, Platform::String ^sramFile, bool direct)
 {
@@ -96,35 +77,22 @@ void Emulator::Init()
 {
     NDS::Init();
 
-    HRESULT hr = S_OK;
+    SDL_AudioSpec spec;
+    SDL_AudioSpec whatIwant, whatIget;
 
-    // Get an interface to the main XAudio2 device
-    hr = XAudio2Create(m_audioDev.GetAddressOf());
+    memset(&whatIwant, 0, sizeof(SDL_AudioSpec));
+    whatIwant.freq = 47340;
+    whatIwant.format = AUDIO_S16LSB;
+    whatIwant.channels = 2;
+    whatIwant.samples = 1024;
+    whatIwant.callback = EmulatorAudioCallback;
 
-    // TODO:
-    if (FAILED(hr));
-    
-    // Create master voice
-    hr = m_audioDev->CreateMasteringVoice(&m_masterVoice);
+    m_device = SDL_OpenAudioDevice(NULL, 0, &whatIwant, &whatIget, 0);
 
-    // TODO
-    if (FAILED(hr));
-
-    WAVEFORMATEX waveInfo;
-    waveInfo.nChannels = 2;
-    waveInfo.nSamplesPerSec = 48000;
-    waveInfo.wBitsPerSample = 16;
-    waveInfo.nAvgBytesPerSec = waveInfo.nSamplesPerSec * 4;
-    waveInfo.nBlockAlign = 4;
-    waveInfo.wFormatTag = WAVE_FORMAT_PCM;
-    waveInfo.cbSize = 0;
-
-    hr = m_audioDev->CreateSourceVoice(&m_sourceVoice, &waveInfo,  0,
-        1.0f);
-
-    if (FAILED(hr))
+    if (!m_device)
     {
-        // TODO
+        auto a = SDL_GetError();
+        int b = 5;
     }
 }
 
@@ -132,9 +100,25 @@ void Emulator::Start()
 {
     m_emuLoop = create_task([&]
     {
+        if (!m_romLoaded || !m_emulating)
+        {
+            return;
+        }
+
+        if (m_device)
+        {
+            SDL_PauseAudioDevice(m_device, 0);
+        }
+
         while (m_romLoaded && m_emulating)
         {
             critical_section::scoped_lock guard(m_emuLock);
+
+            if (m_touching)
+            {
+                NDS::PressKey(16 + 6);
+                NDS::TouchScreen(static_cast<u16>(m_touchPos.x), static_cast<u16>(m_touchPos.y));
+            }
 
             clock_t beginc = clock();
             NDS::RunFrame();
@@ -160,16 +144,12 @@ void Emulator::Start()
                 return m_framebufferUploaded == true;
             });
         }
-    });
 
-    m_emuVoiceLoop = create_task([&]
-    {
-        if (!m_sourceVoice)
+        // Pause device again
+        if (m_device)
         {
-            return;
+            SDL_PauseAudioDevice(m_device, 1);
         }
-
-        m_sourceVoice->Start();
     });
 }
 
@@ -180,9 +160,39 @@ void Emulator::Shutdown()
 
     NDS::DeInit();
 
-    m_sourceVoice->DestroyVoice();
-    m_masterVoice->DestroyVoice();
-    m_audioDev.Reset();
+    if (m_device)
+    {
+        SDL_CloseAudioDevice(m_device);
+    }
 }
 
+void Emulator::SetKeyPressed(const u32 key)
+{
+    critical_section::scoped_lock scopeLock(m_emuLock);
+    NDS::PressKey(key);
+}
+
+void Emulator::SetKeyReleased(const u32 key)
+{
+    critical_section::scoped_lock scopeLock(m_emuLock);
+    NDS::ReleaseKey(key);
+}
+
+void Emulator::Touch(const Vector2 &pos)
+{
+    critical_section::scoped_lock scopeLock(m_emuLock);
+
+    m_touching = true;
+    m_touchPos = pos;
+}
+
+void Emulator::ReleaseScreen()
+{
+    critical_section::scoped_lock scopeLock(m_emuLock);
+
+    m_touching = false;
+    NDS::ReleaseKey(16 + 6);
+
+    NDS::ReleaseScreen();
+}
 }

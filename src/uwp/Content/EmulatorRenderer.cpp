@@ -14,6 +14,7 @@ using namespace DirectX;
 using namespace Windows::Foundation;
 
 using namespace Windows::UI::Xaml;
+using namespace Windows::Graphics::Display;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 EmulatorRenderer::EmulatorRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources,
@@ -74,6 +75,10 @@ void EmulatorRenderer::CreateWindowSizeDependentResources()
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
 }
 
+void EmulatorRenderer::OnOrientationChanged(DisplayInformation^ sender, Platform::Object^ args)
+{
+}
+
 void EmulatorRenderer::UpdateScreen()
 {
     auto context = m_deviceResources->GetD3DDeviceContext();
@@ -118,6 +123,8 @@ void EmulatorRenderer::Update(DX::StepTimer const& timer)
     if (m_emulator->IsUploadPending())
     {
         m_loadingComplete = false;
+        m_hostFPS = timer.GetFramesPerSecond();
+
         UpdateScreen();
     }
 }
@@ -147,47 +154,28 @@ void EmulatorRenderer::Render()
 		return;
 	}
 
+    m_batch->SetRotation(m_deviceResources->ComputeDisplayRotation());
     m_batch->Begin();
 
     bool horizontal = false;
-    DirectX::SimpleMath::Vector2 scaleVec{1};
+    Vector2 scaleV = m_emulator->GetScale();
     
-    if (Config::ScreenLayout == 2)
-    {
-        horizontal = true;
+    m_batch->Draw(m_screen1SRV.Get(), m_emulator->GetScreen1Pos(), nullptr, Colors::White, 0, XMFLOAT2(0, 0),
+        scaleV.x);
 
-        if (Window::Current)
-        {
-            scaleVec = DirectX::SimpleMath::Vector2(Window::Current->Bounds.Width / 256);
-        }
-    }
-    else
-    {
-        if (Window::Current)
-        {
-            scaleVec = DirectX::SimpleMath::Vector2(Window::Current->Bounds.Height / 192);
-        }
-    }
+    m_batch->Draw(m_screen2SRV.Get(), m_emulator->GetScreen2Pos(), nullptr, Colors::White, 0,
+        XMFLOAT2(0, 0), scaleV.x);
 
-    m_batch->Draw(m_screen1SRV.Get(), XMFLOAT2(0, 0), nullptr, Colors::White, 0,
-        scaleVec);
+    std::wstring fpsStr = std::to_wstring(m_emulator->GetFps()).substr(0, 4) + L"(" + 
+        std::to_wstring(m_hostFPS).substr(0, 4) + L")";
 
-    if (horizontal == 2)
-    {
-        m_batch->Draw(m_screen2SRV.Get(), XMFLOAT2(256 * scaleVec.x, 0), nullptr, Colors::White, 0,
-            scaleVec);
-    }
-    else
-    {
-        m_batch->Draw(m_screen2SRV.Get(), XMFLOAT2(0, 192 * scaleVec.y), nullptr, Colors::White, 0,
-            scaleVec);
-    }
+    Vector2 fontSize = m_font->MeasureString(fpsStr.data());
+    XMVECTOR origin = fontSize / 2.0f;
 
-    std::wstring fpsStr = std::to_wstring(m_emulator->GetFps());
-    XMVECTOR origin = m_font->MeasureString(fpsStr.data()) / 2.f;
-
-    m_font->DrawString(m_batch.get(), fpsStr.data(), DirectX::SimpleMath::Vector2{ 512, 256 },
-        Colors::White, 0.f, origin);
+    Vector2 textScale = Vector2{ (192 * scaleV.x) / 18 } / fontSize.y;
+    
+    m_font->DrawString(m_batch.get(), fpsStr.data(), m_emulator->GetScreen1Pos(),
+        Colors::White, 0.f, Vector2{ 0, 0 }, textScale);
 
     m_batch->End();
 }
@@ -233,10 +221,16 @@ void EmulatorRenderer::ReleaseDeviceDependentResources()
 {
 	m_loadingComplete = false;
 
+    m_screen1SRV->Release();
+    m_screen2SRV->Release();
+    m_screen1Texture->Release();
+    m_screen2Texture->Release();
+
     m_screen1SRV.Reset();
     m_screen2SRV.Reset();
     m_screen1Texture.Reset();
     m_screen2Texture.Reset();
 
     m_batch.reset();
+    m_font.reset();
 }

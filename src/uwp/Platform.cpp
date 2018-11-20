@@ -19,6 +19,8 @@
 #include <ppltasks.h>
 #include <Platform.h>
 
+#include <SDL_mutex.h>
+
 using namespace Windows::Devices::Enumeration;
 
 struct ThreadData
@@ -32,7 +34,7 @@ namespace Platform
 void *Thread_Create(void(*func)())
 {
     ThreadData *data = new ThreadData;
-    data->emu_task = concurrency::create_task(concurrency::create_async(func));
+    data->emu_task = concurrency::create_task(func);
 
     return data;
 }
@@ -50,27 +52,28 @@ void Thread_Free(void *thread)
 
 void* Semaphore_Create()
 {
+    return SDL_CreateSemaphore(0);
     return CreateSemaphoreA(NULL, 0, 100, NULL);
 }
 
 void Semaphore_Free(void* sema)
 {
-    CloseHandle(sema);
+    SDL_DestroySemaphore(reinterpret_cast<SDL_sem*>(sema));
 }
 
 void Semaphore_Reset(void* sema)
 {
-    // while (WaitForSingleObject(sema, INFINITE));
+    while (SDL_SemTryWait((SDL_sem*)sema) == 0);
 }
+
 void Semaphore_Wait(void* sema)
 {
-    WaitForSingleObject(sema, INFINITE);
+    SDL_SemWait((SDL_sem*)sema);
 }
 
 void Semaphore_Post(void* sema)
 {
-    LONG prevCount = 0;
-    ReleaseSemaphore(sema, 1, &prevCount);
+    SDL_SemPost((SDL_sem*)sema);
 }
 
 bool MP_Init()
