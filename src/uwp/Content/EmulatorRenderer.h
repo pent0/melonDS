@@ -3,8 +3,10 @@
 #include "..\Common\DeviceResources.h"
 #include "ShaderStructures.h"
 #include "..\Common\StepTimer.h"
+#include "Emulator.h"
 
 #include <SpriteBatch.h>
+#include <SpriteFont.h>
 
 namespace uwp
 {
@@ -12,7 +14,8 @@ namespace uwp
 	class EmulatorRenderer
 	{
 	public:
-		EmulatorRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		EmulatorRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources,
+            const std::shared_ptr<uwp::Emulator> &emulatorInst);
 
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
@@ -24,28 +27,26 @@ namespace uwp
 		void StopTracking();
 		bool IsTracking() { return m_tracking; }
 
-
 	private:
-		void Rotate(float radians);
+		void UpdateScreen();
 
 	private:
 		// Cached pointer to device resources.
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
 
-		// Direct3D resources for cube geometry.
-		Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer;
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader;
-		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer;
+        // Pointer to the emulator instance.
+        std::shared_ptr<uwp::Emulator> m_emulator;
 
         Microsoft::WRL::ComPtr<ID3D11Texture2D>     m_screen1Texture;
         Microsoft::WRL::ComPtr<ID3D11Texture2D>     m_screen2Texture;
 
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_screen1SRV;
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_screen2SRV;
+
         // Sprite batch, used for drawing control buttons and the framebuffer
         // bitmap
-        std::unique_ptr<DirectX::SpriteBatch> batch;
+        std::unique_ptr<DirectX::SpriteBatch> m_batch;
+        std::unique_ptr<DirectX::SpriteFont> m_font;
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer	m_constantBufferData;
@@ -57,4 +58,3 @@ namespace uwp
 		bool	m_tracking;
 	};
 }
-

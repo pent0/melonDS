@@ -6,6 +6,8 @@
 #include "pch.h"
 #include "DirectXPage.xaml.h"
 
+#include <ppltasks.h>
+
 #include <NDS.h>
 #include <Config.h>
 
@@ -42,7 +44,10 @@ App::App()
 App::~App()
 {
     // Deinitialize all NDS resource
-    NDS::DeInit();
+    if (m_emulator)
+    {
+        m_emulator->Shutdown();
+    }
 }
 
 /// <summary>
@@ -53,11 +58,10 @@ App::~App()
 /// <param name="e">Details about the launch request and process.</param>
 void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEventArgs^ e)
 {
-    // Initialize NDS instance
-    NDS::Init();
-    const char *sram_file = "temp.sram";
+    m_emulator = std::make_shared<uwp::Emulator>();
 
-    bool res = NDS::LoadROM("basic-first-game.nds", sram_file, true);
+    // Initialize NDS instance
+    m_emulator->Init();
 
 #if _DEBUG
 	if (IsDebuggerPresent())
@@ -121,6 +125,15 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
 
     displayInfo->OrientationChanged += ref new TypedEventHandler<DisplayInformation^, Object^>(
         this, &App::OnOrientationChanged);
+
+    m_emulator->LoadROM("AC.nds", "temp.sram", true).then([&](task<bool> res)
+    {
+        if (res.get())
+        {
+            m_emulator->SetEmulate(true);
+            m_emulator->Start();
+        }
+    });
 }
 
 /// <summary>
@@ -167,7 +180,7 @@ void App::OnNavigationFailed(Platform::Object ^sender, Windows::UI::Xaml::Naviga
 void App::OnMainPageDisabled(Platform::Object ^sender) 
 {
     auto rootFrame = dynamic_cast<Frame^>(Window::Current->Content);
-    rootFrame->Navigate(TypeName(DirectXPage::typeid));
+    rootFrame->Navigate(TypeName(DirectXPage::typeid), ref new EmulatorWrapper(m_emulator));
 }
 
 void App::OnOrientationChanged(Windows::Graphics::Display::DisplayInformation ^sender,

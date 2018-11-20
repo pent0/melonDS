@@ -5,13 +5,16 @@
 #include "Content\EmulatorRenderer.h"
 #include "Content\SampleFpsTextRenderer.h"
 
+#include "Emulator.h"
+
 // Renders Direct2D and 3D content on the screen.
 namespace uwp
 {
 	class uwpMain : public DX::IDeviceNotify
 	{
 	public:
-		uwpMain(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		uwpMain(const std::shared_ptr<DX::DeviceResources>& deviceResources,
+            const std::shared_ptr<uwp::Emulator> &emuInstance);
 		~uwpMain();
 		void CreateWindowSizeDependentResources();
 		void StartTracking() { m_sceneRenderer->StartTracking(); }

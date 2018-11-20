@@ -90,6 +90,8 @@
     <ClCompile Include="Content\EmulatorRenderer.cpp">
       <Filter>Content</Filter>
     </ClCompile>
+    <ClCompile Include="Emulator.cpp" />
+    <ClCompile Include="Common\Utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.xaml.h" />
@@ -128,6 +130,8 @@
     <ClInclude Include="Utility.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="Emulator.h" />
+    <ClInclude Include="Common\Utility.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">
@@ -143,9 +147,17 @@
     <None Include="..\..\..\..\..\MelonDS\bios7.bin" />
     <None Include="..\..\..\..\..\MelonDS\bios9.bin" />
     <None Include="..\..\..\..\..\MelonDS\firmware.bin" />
+    <None Include="..\..\..\..\..\MelonDS\Games\AC\wright.nds" />
+    <None Include="Assets\Default.spritefont">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="..\..\..\..\..\MelonDS\Games\AC\AC.nds" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="DirectXPage.xaml" />
     <Page Include="MainPage.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Include="Strings\en-US\Resources.resw" />
   </ItemGroup>
 </Project>

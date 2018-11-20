@@ -8,14 +8,15 @@ using namespace Windows::System::Threading;
 using namespace Concurrency;
 
 // Loads and initializes application assets when the application is loaded.
-uwpMain::uwpMain(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
+uwpMain::uwpMain(const std::shared_ptr<DX::DeviceResources>& deviceResources,
+    const std::shared_ptr<uwp::Emulator> &emuInstance) :
 	m_deviceResources(deviceResources), m_pointerLocationX(0.0f)
 {
 	// Register to be notified if the Device is lost or recreated
 	m_deviceResources->RegisterDeviceNotify(this);
 
 	// TODO: Replace this with your app's content initialization.
-	m_sceneRenderer = std::unique_ptr<EmulatorRenderer>(new EmulatorRenderer(m_deviceResources));
+	m_sceneRenderer = std::unique_ptr<EmulatorRenderer>(new EmulatorRenderer(m_deviceResources, emuInstance));
 
 	m_fpsTextRenderer = std::unique_ptr<SampleFpsTextRenderer>(new SampleFpsTextRenderer(m_deviceResources));
 

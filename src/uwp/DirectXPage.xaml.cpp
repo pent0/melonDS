@@ -6,6 +6,8 @@
 #include "pch.h"
 #include "DirectXPage.xaml.h"
 
+#include "Emulator.h"
+
 using namespace uwp;
 
 using namespace Platform;
@@ -77,11 +79,9 @@ DirectXPage::DirectXPage():
 		m_coreInput->Dispatcher->ProcessEvents(CoreProcessEventsOption::ProcessUntilQuit);
 	});
 
+    //const std::shared_ptr<uwp::Emulator> &emuInstance
 	// Run task on a dedicated high priority background thread.
 	m_inputLoopWorker = ThreadPool::RunAsync(workItemHandler, WorkItemPriority::High, WorkItemOptions::TimeSliced);
-
-	m_main = std::unique_ptr<uwpMain>(new uwpMain(m_deviceResources));
-	m_main->StartRenderLoop();
 }
 
 DirectXPage::~DirectXPage()
@@ -91,9 +91,22 @@ DirectXPage::~DirectXPage()
 	m_coreInput->Dispatcher->StopProcessEvents();
 }
 
+void DirectXPage::OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs ^e)
+{
+    m_main = std::unique_ptr<uwpMain>(new uwpMain(m_deviceResources,
+        dynamic_cast<uwp::EmulatorWrapper^>(e->Parameter)->m_emu));
+
+    m_main->StartRenderLoop();
+}
+
 // Saves the current state of the app for suspend and terminate events.
 void DirectXPage::SaveInternalState(IPropertySet^ state)
 {
+    if (!m_main)
+    {
+        return;
+    }
+
 	critical_section::scoped_lock lock(m_main->GetCriticalSection());
 	m_deviceResources->Trim();
 
@@ -109,13 +122,21 @@ void DirectXPage::LoadInternalState(IPropertySet^ state)
 	// Put code to load app state here.
 
 	// Start rendering when the app is resumed.
-	m_main->StartRenderLoop();
+    if (m_main)
+    {
+        m_main->StartRenderLoop();
+    }
 }
 
 // Window event handlers.
 
 void DirectXPage::OnVisibilityChanged(CoreWindow^ sender, VisibilityChangedEventArgs^ args)
 {
+    if (!m_main)
+    {
+        return;
+    }
+
 	m_windowVisible = args->Visible;
 	if (m_windowVisible)
 	{

@@ -9,6 +9,10 @@
 #include "DirectXPage.xaml.h"
 #include "MainPage.xaml.h"
 
+#include "Emulator.h"
+
+#include <memory>
+
 namespace uwp
 {
 		/// <summary>
@@ -33,5 +37,7 @@ namespace uwp
 
 		DirectXPage^ m_directXPage;
         MainPage ^m_mainPage;
+
+        std::shared_ptr<uwp::Emulator> m_emulator;
 	};
 }

@@ -10,6 +10,8 @@
 #include "Common\DeviceResources.h"
 #include "uwpMain.h"
 
+#include "Emulator.h"
+
 namespace uwp
 {
 	/// <summary>
@@ -17,6 +19,9 @@ namespace uwp
 	/// </summary>
 	public ref class DirectXPage sealed
 	{
+    protected:
+        void OnNavigatedTo(Windows::UI::Xaml::Navigation::NavigationEventArgs ^e) override;
+
 	public:
 		DirectXPage();
 		virtual ~DirectXPage();
@@ -26,7 +31,7 @@ namespace uwp
 
 	private:
 		// XAML low-level rendering event handler.
-		void OnRendering(Platform::Object^ sender, Platform::Object^ args);
+		void OnRendering(Platform::Object^ sender, Platform::Object^ args);;
 
 		// Window event handlers.
 		void OnVisibilityChanged(Windows::UI::Core::CoreWindow^ sender, Windows::UI::Core::VisibilityChangedEventArgs^ args);
