@@ -65,6 +65,7 @@ namespace uwp
         std::shared_ptr<uwp::Emulator> m_emulator;
 
 		bool m_windowVisible;
+        bool m_coreInputDispatcherStopped = false;
         double m_rawScaleFactor;
 	};
 }

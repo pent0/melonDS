@@ -55,7 +55,9 @@ private:
     Concurrency::critical_section m_vcLock;
 
     Rectangle m_lRect, m_rRect, m_aRect, m_bRect, m_xRect, m_yRect, m_startRect, m_selectRect,
-        m_dpadRect;
+        m_dpadRect, m_leftRect, m_rightRect, m_upRect, m_downRect;
+
+    Vector2 m_lPos, m_rPos, m_aPos, m_bPos, m_xPos, m_yPos, m_startPos, m_selectPos, m_dpadPos;
 
     ControllerState m_state;
 
