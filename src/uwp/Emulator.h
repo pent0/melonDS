@@ -15,6 +15,8 @@
 #include <d3d11.h>
 #include <SimpleMath.h>
 
+#include "VirtualController.h"
+
 using namespace concurrency;
 using namespace DirectX::SimpleMath;
 
@@ -51,7 +53,14 @@ class Emulator
     bool m_touching = false;
     Vector2 m_touchPos { .0f };
 
+    std::unique_ptr<VirtualController>   m_controller;
+
 public:
+    VirtualController *GetVirtualController()
+    {
+        return m_controller.get();
+    }
+
     task<bool> LoadROM(Platform::String ^path, Platform::String ^sramFile, bool direct);
         
     void Init();

@@ -4,3 +4,6 @@
 [submodule "src/uwp/SDL"]
 	path = src/uwp/SDL
 	url = https://github.com/bminor/SDL
+[submodule "src/arme/external/capstone"]
+	path = src/arme/external/capstone
+	url = https://github.com/aquynh/capstone

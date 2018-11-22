@@ -91,9 +91,9 @@ void Emulator::Init()
 
     if (!m_device)
     {
-        auto a = SDL_GetError();
-        int b = 5;
     }
+
+    m_controller = std::make_unique<VirtualController>(ref new EmulatorConfig());
 }
 
 void Emulator::Start()
@@ -119,6 +119,28 @@ void Emulator::Start()
                 NDS::PressKey(16 + 6);
                 NDS::TouchScreen(static_cast<u16>(m_touchPos.x), static_cast<u16>(m_touchPos.y));
             }
+
+            ControllerState state = m_controller->GetState();
+
+            /*
+            if (state.m_a)
+            {
+                NDS::PressKey(0);
+            } 
+            else
+            {
+                NDS::ReleaseKey(0);
+            }
+
+            if (state.m_b)
+            {
+                NDS::PressKey(1);
+            }
+            else
+            {
+                NDS::ReleaseKey(1);
+            }
+            */
 
             clock_t beginc = clock();
             NDS::RunFrame();

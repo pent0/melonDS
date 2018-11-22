@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.11)
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_MODULE_PATH 
+	${CMAKE_MODULE_PATH}
+	${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 SET(PROJECT_WX melonDS)
 PROJECT(${PROJECT_WX})
@@ -169,9 +172,15 @@ endif (UNIX)
 
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
-link_libraries(${SDL2_LIBRARIES})
+link_libraries(${SDL2_LIBRARY})
 
-add_executable(${PROJECT_WX} ${SOURCES})
+if (MSVC)
+	add_executable(${PROJECT_WX} WIN32 ${SOURCES})
+else (MSVC)
+	add_executable(${PROJECT_WX} ${SOURCES})
+endif (MSVC)
+
+target_include_directories(${PROJECT_WX} PUBLIC src)
 target_link_libraries(${PROJECT_WX})
 
 if(NOT CMAKE_BUILD_TYPE)
