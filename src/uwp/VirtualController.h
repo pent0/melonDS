@@ -46,7 +46,12 @@ public:
 
     ControllerState GetState();
 
-private:
+    explicit VirtualController(EmulatorConfig ^config)
+    {
+        InitFromSettings(config);
+    }
+
+private:    
     void ResetState();
     void CalculateRenderRect();
 

@@ -58,8 +58,6 @@ void T_UNK(ARM* cpu)
     cpu->JumpTo(cpu->ExceptionBase + 0x04);
 }
 
-
-
 void A_MSR_IMM(ARM* cpu)
 {
     u32* psr;

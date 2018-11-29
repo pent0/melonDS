@@ -87,6 +87,7 @@
     <ClCompile Include="Emulator.cpp" />
     <ClCompile Include="Common\Utility.cpp" />
     <ClCompile Include="VirtualController.cpp" />
+    <ClCompile Include="..\ARM_JitArm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.xaml.h" />
@@ -129,6 +130,8 @@
     <ClInclude Include="Common\Utility.h" />
     <ClInclude Include="VirtualController.h" />
     <ClInclude Include="EmulatorConfig.h" />
+    <ClInclude Include="..\ARM_JitArm.h" />
+    <ClInclude Include="..\ARMBase.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">
@@ -140,7 +143,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="uwp_TemporaryKey.pfx" />
-    <None Include="..\..\..\..\..\..\Users\fewds\Downloads\basic-first-game.nds" />
     <None Include="..\..\..\..\..\MelonDS\bios7.bin" />
     <None Include="..\..\..\..\..\MelonDS\bios9.bin" />
     <None Include="..\..\..\..\..\MelonDS\firmware.bin" />

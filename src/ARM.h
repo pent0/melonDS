@@ -22,6 +22,7 @@
 #include "types.h"
 #include "NDS.h"
 #include "CP15.h"
+#include "ARMBase.h"
 
 // lame
 #define C_S(x) x
@@ -30,26 +31,20 @@
 
 #define ROR(x, n) (((x) >> (n)) | ((x) << (32-(n))))
 
-class ARM
+class ARM: public ARM_Base
 {
 public:
     ARM(u32 num);
     ~ARM(); // destroy shit
 
-    void Reset();
+    void Reset() override;
 
-    void SetClockShift(u32 shift)
-    {
-        ClockShift = shift;
-        ClockDiffMask = (1<<shift) - 1;
-    }
+    void DoSavestate(Savestate* file) override;
 
-    void DoSavestate(Savestate* file);
-
-    void JumpTo(u32 addr, bool restorecpsr = false);
+    void JumpTo(u32 addr, bool restorecpsr = false) override;
     void RestoreCPSR();
 
-    void Halt(u32 halt)
+    void Halt(u32 halt) override
     {
         if (halt==2 && Halted==1) return;
         Halted = halt;
@@ -64,7 +59,7 @@ public:
         }
     }
 
-    s32 Execute();
+    s32 Execute() override;
 
     bool CheckCondition(u32 code)
     {
@@ -101,6 +96,55 @@ public:
 
     void SetupCodeMem(u32 addr);
 
+    u32  GetRegister(u16 id) override
+    {
+        return R[id];
+    }
+
+    void SetRegister(u16 id, u32 value) override
+    {
+        R[id] = value;
+    }
+
+    u32  GetCpsr() override
+    {
+        return CPSR;
+    }
+
+    void SetCpsr(u32 value) override
+    {
+        CPSR = value;
+    }
+
+    u32  GetIRQ(u16 id) override
+    {
+        return R_IRQ[id];
+    }
+
+    void SetIRQ(u16 id, u32 val) override
+    {
+        R_IRQ[id] = val;
+    }
+
+    u32  GetSVC(u16 id) override
+    {
+        return R_SVC[id];
+    }
+
+    void SetSVC(u16 id, u32 val) override
+    {
+        R_SVC[id] = val;
+    }
+
+    s32  &CPUCyclesToRun() override
+    {
+        return CyclesToRun;
+    }
+
+    s32  &CPUCycles() override
+    {
+        return Cycles;
+    }
 
     u16 CodeRead16(u32 addr)
     {
@@ -140,7 +184,6 @@ public:
 
         return val;
     }
-
 
     u8 DataRead8(u32 addr, u32 forceuser=0)
     {
@@ -230,13 +273,7 @@ public:
         Cycles += Waitstates[3][(addr>>24)&0xF];
     }
 
-
     u32 Num;
-
-    // shift relative to system clock
-    // 0=33MHz 1=66MHz 2=133MHz
-    u32 ClockShift;
-    u32 ClockDiffMask;
 
     // waitstates:
     // 0=code16 1=code32 2=data16 3=data32

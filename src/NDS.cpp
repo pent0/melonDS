@@ -21,6 +21,7 @@
 #include "Config.h"
 #include "NDS.h"
 #include "ARM.h"
+#include "ARM_JitArm.h"
 #include "CP15.h"
 #include "NDSCart.h"
 #include "DMA.h"
@@ -36,8 +37,8 @@
 namespace NDS
 {
 
-ARM* ARM9;
-ARM* ARM7;
+ARM_Base* ARM9;
+ARM_Base* ARM7;
 
 s32 CurIterationCycles;
 s32 ARM7Offset;
@@ -114,6 +115,9 @@ bool Init()
 {
     ARM9 = new ARM(0);
     ARM7 = new ARM(1);
+
+    // ARM9 = new ARM_JITARM(0);
+    // ARM7 = new ARM_JITARM(1);
 
     DMAs[0] = new DMA(0, 0);
     DMAs[1] = new DMA(0, 1);
@@ -207,17 +211,17 @@ void SetupDirectBoot()
     CP15::Write(0x911, 0x00000020);
     CP15::Write(0x100, 0x00050000);
 
-    ARM9->R[12] = bootparams[1];
-    ARM9->R[13] = 0x03002F7C;
-    ARM9->R[14] = bootparams[1];
-    ARM9->R_IRQ[0] = 0x03003F80;
-    ARM9->R_SVC[0] = 0x03003FC0;
+    ARM9->SetRegister(12, bootparams[1]);
+    ARM9->SetRegister(13, 0x03002F7C);
+    ARM9->SetRegister(14, bootparams[1]);
+    ARM9->SetIRQ(0, 0x03003F80);
+    ARM9->SetIRQ(0, 0x03003FC0);
 
-    ARM7->R[12] = bootparams[5];
-    ARM7->R[13] = 0x0380FD80;
-    ARM7->R[14] = bootparams[5];
-    ARM7->R_IRQ[0] = 0x0380FF80;
-    ARM7->R_SVC[0] = 0x0380FFC0;
+    ARM7->SetRegister(12, bootparams[5]);
+    ARM7->SetRegister(13, 0x0380FD80);
+    ARM7->SetRegister(14, bootparams[5]);
+    ARM7->SetIRQ(0, 0x0380FF80);
+    ARM7->SetSVC(0, 0x0380FFC0);
 
     ARM9->JumpTo(bootparams[1]);
     ARM7->JumpTo(bootparams[5]);
@@ -628,9 +632,9 @@ u32 RunFrame()
             }
             else
             {
-                ARM9->CyclesToRun = CurIterationCycles << 1;
+                ARM9->CPUCyclesToRun() = CurIterationCycles << 1;
                 CurCPU = 1; ARM9->Execute(); CurCPU = 0;
-                ndscyclestorun = ARM9->Cycles >> 1;
+                ndscyclestorun = ARM9->CPUCycles() >> 1;
             }
 
             if (CPUStop & 0x0FFF0000)
@@ -644,9 +648,9 @@ u32 RunFrame()
             }
             else
             {
-                ARM7->CyclesToRun = ndscyclestorun - ARM7Offset;
+                ARM7->CPUCyclesToRun() = ndscyclestorun - ARM7Offset;
                 CurCPU = 2; ARM7->Execute(); CurCPU = 0;
-                ARM7Offset = ARM7->Cycles - ARM7->CyclesToRun;
+                ARM7Offset = ARM7->CPUCycles() - ARM7->CPUCyclesToRun();
             }
         }
 
@@ -667,8 +671,8 @@ void Reschedule()
         return;
     }
 
-    if      (CurCPU == 1) ARM9->CyclesToRun = CurIterationCycles << 1;
-    else if (CurCPU == 2) ARM7->CyclesToRun = CurIterationCycles - ARM7Offset;
+    if      (CurCPU == 1) ARM9->CPUCyclesToRun() = CurIterationCycles << 1;
+    else if (CurCPU == 2) ARM7->CPUCyclesToRun() = CurIterationCycles - ARM7Offset;
     // this is all. a reschedule shouldn't happen during DMA or GXFIFO stall.
 }
 
@@ -683,7 +687,7 @@ void ScheduleEvent(u32 id, bool periodic, s32 delay, void (*func)(u32), u32 para
     SchedEvent* evt = &SchedList[id];
 
     if (periodic) evt->WaitCycles += delay;
-    else          evt->WaitCycles  = delay + (ARM9->Cycles >> 1);
+    else          evt->WaitCycles  = delay + (ARM9->CPUCycles() >> 1);
 
     evt->Func = func;
     evt->Param = param;
@@ -820,7 +824,7 @@ void ResumeCPU(u32 cpu, u32 mask)
 
 u32 GetPC(u32 cpu)
 {
-    return cpu ? ARM7->R[15] : ARM9->R[15];
+    return cpu ? ARM7->GetRegister(15) : ARM9->GetRegister(15);
 }
 
 
@@ -1084,8 +1088,8 @@ void StartSqrt()
 
 void debug(u32 param)
 {
-    printf("ARM9 PC=%08X LR=%08X %08X\n", ARM9->R[15], ARM9->R[14], ARM9->R_IRQ[1]);
-    printf("ARM7 PC=%08X LR=%08X %08X\n", ARM7->R[15], ARM7->R[14], ARM7->R_IRQ[1]);
+    printf("ARM9 PC=%08X LR=%08X %08X\n", ARM9->GetRegister(15), ARM9->GetRegister(14), ARM9->GetIRQ(1));
+    printf("ARM7 PC=%08X LR=%08X %08X\n", ARM7->GetRegister(15), ARM7->GetRegister(14), ARM7->GetIRQ(1));
 
     printf("ARM9 IME=%08X IE=%08X IF=%08X\n", IME[0], IE[0], IF[0]);
     printf("ARM7 IME=%08X IE=%08X IF=%08X\n", IME[1], IE[1], IF[1]);
@@ -1204,7 +1208,7 @@ u16 ARM9Read16(u32 addr)
         return 0xFFFF;
     }
 
-    //printf("unknown arm9 read16 %08X %08X\n", addr, ARM9->R[15]);
+    //printf("unknown arm9 read16 %08X %08X\n", addr, ARM9->GetRegister(15));
     return 0;
 }
 
@@ -1253,7 +1257,7 @@ u32 ARM9Read32(u32 addr)
         return 0xFFFFFFFF;
     }
 
-    printf("unknown arm9 read32 %08X | %08X %08X %08X\n", addr, ARM9->R[15], ARM9->R[12], ARM9Read32(0x027FF820));
+    printf("unknown arm9 read32 %08X | %08X %08X %08X\n", addr, ARM9->GetRegister(15), ARM9->GetRegister(12), ARM9Read32(0x027FF820));
     return 0;
 }
 
@@ -1357,7 +1361,7 @@ void ARM9Write32(u32 addr, u32 val)
         return;
     }
 
-    printf("unknown arm9 write32 %08X %08X | %08X\n", addr, val, ARM9->R[15]);
+    printf("unknown arm9 write32 %08X %08X | %08X\n", addr, val, ARM9->GetRegister(15));
 }
 
 bool ARM9GetMemRegion(u32 addr, bool write, MemRegion* region)
@@ -1396,9 +1400,9 @@ u8 ARM7Read8(u32 addr)
 {
     if (addr < 0x00004000)
     {
-        if (ARM7->R[15] >= 0x4000)
+        if (ARM7->GetRegister(15) >= 0x4000)
             return 0xFF;
-        if (addr < ARM7BIOSProt && ARM7->R[15] >= ARM7BIOSProt)
+        if (addr < ARM7BIOSProt && ARM7->GetRegister(15) >= ARM7BIOSProt)
             return 0xFF;
 
         return *(u8*)&ARM7BIOS[addr];
@@ -1425,7 +1429,8 @@ u8 ARM7Read8(u32 addr)
         return GPU::ReadVRAM_ARM7<u8>(addr);
     }
 
-    printf("unknown arm7 read8 %08X %08X %08X/%08X\n", addr, ARM7->R[15], ARM7->R[0], ARM7->R[1]);
+    printf("unknown arm7 read8 %08X %08X %08X/%08X\n", addr, ARM7->GetRegister(15), ARM7->GetRegister(0), 
+        ARM7->GetRegister(1));
     return 0;
 }
 
@@ -1433,9 +1438,9 @@ u16 ARM7Read16(u32 addr)
 {
     if (addr < 0x00004000)
     {
-        if (ARM7->R[15] >= 0x4000)
+        if (ARM7->GetRegister(15) >= 0x4000)
             return 0xFFFF;
-        if (addr < ARM7BIOSProt && ARM7->R[15] >= ARM7BIOSProt)
+        if (addr < ARM7BIOSProt && ARM7->GetRegister(15) >= ARM7BIOSProt)
             return 0xFFFF;
 
         return *(u16*)&ARM7BIOS[addr];
@@ -1465,7 +1470,7 @@ u16 ARM7Read16(u32 addr)
         return GPU::ReadVRAM_ARM7<u16>(addr);
     }
 
-    printf("unknown arm7 read16 %08X %08X\n", addr, ARM7->R[15]);
+    printf("unknown arm7 read16 %08X %08X\n", addr, ARM7->GetRegister(15));
     return 0;
 }
 
@@ -1473,9 +1478,9 @@ u32 ARM7Read32(u32 addr)
 {
     if (addr < 0x00004000)
     {
-        if (ARM7->R[15] >= 0x4000)
+        if (ARM7->GetRegister(15) >= 0x4000)
             return 0xFFFFFFFF;
-        if (addr < ARM7BIOSProt && ARM7->R[15] >= ARM7BIOSProt)
+        if (addr < ARM7BIOSProt && ARM7->GetRegister(15) >= ARM7BIOSProt)
             return 0xFFFFFFFF;
 
         return *(u32*)&ARM7BIOS[addr];
@@ -1505,7 +1510,7 @@ u32 ARM7Read32(u32 addr)
         return GPU::ReadVRAM_ARM7<u32>(addr);
     }
 
-    printf("unknown arm7 read32 %08X | %08X\n", addr, ARM7->R[15]);
+    printf("unknown arm7 read32 %08X | %08X\n", addr, ARM7->GetRegister(15));
     return 0;
 }
 
@@ -1537,7 +1542,7 @@ void ARM7Write8(u32 addr, u8 val)
         return;
     }
 
-    printf("unknown arm7 write8 %08X %02X @ %08X\n", addr, val, ARM7->R[15]);
+    printf("unknown arm7 write8 %08X %02X @ %08X\n", addr, val, ARM7->GetRegister(15));
 }
 
 void ARM7Write16(u32 addr, u16 val)
@@ -1572,7 +1577,7 @@ void ARM7Write16(u32 addr, u16 val)
         return;
     }
 
-    //printf("unknown arm7 write16 %08X %04X @ %08X\n", addr, val, ARM7->R[15]);
+    //printf("unknown arm7 write16 %08X %04X @ %08X\n", addr, val, ARM7->GetRegister(15));
 }
 
 void ARM7Write32(u32 addr, u32 val)
@@ -1608,7 +1613,7 @@ void ARM7Write32(u32 addr, u32 val)
         return;
     }
 
-    //printf("unknown arm7 write32 %08X %08X @ %08X\n", addr, val, ARM7->R[15]);
+    //printf("unknown arm7 write32 %08X %08X @ %08X\n", addr, val, ARM7->GetRegister(15));
 }
 
 bool ARM7GetMemRegion(u32 addr, bool write, MemRegion* region)
@@ -1644,7 +1649,7 @@ bool ARM7GetMemRegion(u32 addr, bool write, MemRegion* region)
     // BIOS. ARM7 PC has to be within range.
     if (addr < 0x00004000 && !write)
     {
-        if (ARM7->R[15] < 0x4000 && (addr >= ARM7BIOSProt || ARM7->R[15] < ARM7BIOSProt))
+        if (ARM7->GetRegister(15) < 0x4000 && (addr >= ARM7BIOSProt || ARM7->GetRegister(15) < ARM7BIOSProt))
         {
             region->Mem = ARM7BIOS;
             region->Mask = 0x3FFF;
@@ -1733,7 +1738,7 @@ u8 ARM9IORead8(u32 addr)
         return GPU3D::Read8(addr);
     }
 
-    printf("unknown ARM9 IO read8 %08X %08X\n", addr, ARM9->R[15]);
+    printf("unknown ARM9 IO read8 %08X %08X\n", addr, ARM9->GetRegister(15));
     return 0;
 }
 
@@ -1855,7 +1860,7 @@ u16 ARM9IORead16(u32 addr)
         return GPU3D::Read16(addr);
     }
 
-    printf("unknown ARM9 IO read16 %08X %08X\n", addr, ARM9->R[15]);
+    printf("unknown ARM9 IO read16 %08X %08X\n", addr, ARM9->GetRegister(15));
     return 0;
 }
 
@@ -1971,7 +1976,7 @@ u32 ARM9IORead32(u32 addr)
         return GPU3D::Read32(addr);
     }
 
-    printf("unknown ARM9 IO read32 %08X %08X\n", addr, ARM9->R[15]);
+    printf("unknown ARM9 IO read32 %08X %08X\n", addr, ARM9->GetRegister(15));
     return 0;
 }
 
@@ -2051,7 +2056,7 @@ void ARM9IOWrite8(u32 addr, u8 val)
         return;
     }
 
-    printf("unknown ARM9 IO write8 %08X %02X %08X\n", addr, val, ARM9->R[15]);
+    printf("unknown ARM9 IO write8 %08X %02X %08X\n", addr, val, ARM9->GetRegister(15));
 }
 
 void ARM9IOWrite16(u32 addr, u16 val)
@@ -2212,7 +2217,7 @@ void ARM9IOWrite16(u32 addr, u16 val)
         return;
     }
 
-    printf("unknown ARM9 IO write16 %08X %04X %08X\n", addr, val, ARM9->R[15]);
+    printf("unknown ARM9 IO write16 %08X %04X %08X\n", addr, val, ARM9->GetRegister(15));
 }
 
 void ARM9IOWrite32(u32 addr, u32 val)
@@ -2365,7 +2370,7 @@ void ARM9IOWrite32(u32 addr, u32 val)
         return;
     }
 
-    printf("unknown ARM9 IO write32 %08X %08X %08X\n", addr, val, ARM9->R[15]);
+    printf("unknown ARM9 IO write32 %08X %08X %08X\n", addr, val, ARM9->GetRegister(15));
 }
 
 
@@ -2410,7 +2415,7 @@ u8 ARM7IORead8(u32 addr)
         return SPU::Read8(addr);
     }
 
-    printf("unknown ARM7 IO read8 %08X %08X\n", addr, ARM7->R[15]);
+    printf("unknown ARM7 IO read8 %08X %08X\n", addr, ARM7->GetRegister(15));
     return 0;
 }
 
@@ -2487,7 +2492,7 @@ u16 ARM7IORead16(u32 addr)
         return SPU::Read16(addr);
     }
 
-    printf("unknown ARM7 IO read16 %08X %08X\n", addr, ARM7->R[15]);
+    printf("unknown ARM7 IO read16 %08X %08X\n", addr, ARM7->GetRegister(15));
     return 0;
 }
 
@@ -2573,7 +2578,7 @@ u32 ARM7IORead32(u32 addr)
         return SPU::Read32(addr);
     }
 
-    printf("unknown ARM7 IO read32 %08X %08X\n", addr, ARM7->R[15]);
+    printf("unknown ARM7 IO read32 %08X %08X\n", addr, ARM7->GetRegister(15));
     return 0;
 }
 
@@ -2628,7 +2633,7 @@ void ARM7IOWrite8(u32 addr, u8 val)
     case 0x04000208: IME[1] = val & 0x1; return;
 
     case 0x04000300:
-        if (ARM7->R[15] >= 0x4000)
+        if (ARM7->GetRegister(15) >= 0x4000)
             return;
         if (!(PostFlag7 & 0x01))
             PostFlag7 = val & 0x01;
@@ -2645,7 +2650,7 @@ void ARM7IOWrite8(u32 addr, u8 val)
         return;
     }
 
-    printf("unknown ARM7 IO write8 %08X %02X %08X\n", addr, val, ARM7->R[15]);
+    printf("unknown ARM7 IO write8 %08X %02X %08X\n", addr, val, ARM7->GetRegister(15));
 }
 
 void ARM7IOWrite16(u32 addr, u16 val)
@@ -2746,7 +2751,7 @@ void ARM7IOWrite16(u32 addr, u16 val)
     // TODO: what happens when writing to IF this way??
 
     case 0x04000300:
-        if (ARM7->R[15] >= 0x4000)
+        if (ARM7->GetRegister(15) >= 0x4000)
             return;
         if (!(PostFlag7 & 0x01))
             PostFlag7 = val & 0x01;
@@ -2766,7 +2771,7 @@ void ARM7IOWrite16(u32 addr, u16 val)
         return;
     }
 
-    printf("unknown ARM7 IO write16 %08X %04X %08X\n", addr, val, ARM7->R[15]);
+    printf("unknown ARM7 IO write16 %08X %04X %08X\n", addr, val, ARM7->GetRegister(15));
 }
 
 void ARM7IOWrite32(u32 addr, u32 val)
@@ -2868,7 +2873,7 @@ void ARM7IOWrite32(u32 addr, u32 val)
         return;
     }
 
-    printf("unknown ARM7 IO write32 %08X %08X %08X\n", addr, val, ARM7->R[15]);
+    printf("unknown ARM7 IO write32 %08X %08X %08X\n", addr, val, ARM7->GetRegister(15));
 }
 
 }

@@ -15,10 +15,6 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
-#include "ppsspp_config.h"
-
-#include "base/logging.h"
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -31,12 +27,12 @@
 #include <sys/mman.h>
 #endif
 
-#include "MemoryUtil.h"
-#include "ArmEmitter.h"
-#include "CPUDetect.h"
+#include <Arme/MemoryUtil.h>
+#include <Arme/ArmEmitter.h>
+#include <Arme/CPUDetect.h>
 
 #ifdef _WIN32
-#include "CommonWindows.h"
+#include <Arme/CommonWindows.h>
 #endif
 
 // Want it in release builds too
@@ -98,7 +94,7 @@ Operand2 AssumeMakeOperand2(u32 imm) {
 	_dbg_assert_msg_(JIT, result, "Could not make assumed Operand2.");
 	if (!result) {
 		// Make double sure that we get it logged.
-		ERROR_LOG(JIT, "Could not make assumed Operand2.");
+		// ERROR_LOG(JIT, "Could not make assumed Operand2.");
 	}
 	return op2;
 }
@@ -274,27 +270,6 @@ bool ARMXEmitter::TryANDI2R(ARMReg rd, ARMReg rs, u32 val)
 		}
 		return true;
 	} else {
-#if PPSSPP_ARCH(ARMV7)
-		// Check if we have a single pattern of sequential bits.
-		int seq = -1;
-		for (int i = 0; i < 32; ++i) {
-			if (((val >> i) & 1) == 0) {
-				if (seq == -1) {
-					// The width is all bits previous to this, set to 1.
-					seq = i;
-				}
-			} else if (seq != -1) {
-				// Uh oh, more than one sequence.
-				seq = -2;
-			}
-		}
-
-		if (seq > 0) {
-			UBFX(rd, rs, 0, seq);
-			return true;
-		}
-#endif
-
 		int ops = 0;
 		for (int i = 0; i < 32; i += 2) {
 			u8 bits = RotR(val, i) & 0xFF;
@@ -305,12 +280,6 @@ bool ARMXEmitter::TryANDI2R(ARMReg rd, ARMReg rs, u32 val)
 			}
 		}
 
-		// The worst case is 4 (e.g. 0x55555555.)
-#if PPSSPP_ARCH(ARMV7)
-		if (ops > 3) {
-			return false;
-		}
-#endif
 		bool first = true;
 		for (int i = 0; i < 32; i += 2) {
 			u8 bits = RotR(val, i) & 0xFF;
@@ -407,10 +376,6 @@ bool ARMXEmitter::TryORI2R(ARMReg rd, ARMReg rs, u32 val)
 		bool inversed;
 		if (TryMakeOperand2_AllowInverse(val, op2, &inversed) && ops >= 3) {
 			return false;
-#if PPSSPP_ARCH(ARMV7)
-		} else if (ops > 3) {
-			return false;
-#endif
 		}
 
 		bool first = true;
@@ -494,26 +459,9 @@ void ARMXEmitter::MOVI2R(ARMReg reg, u32 val, bool optimize)
 	Operand2 op2;
 	bool inverse;
 
-#if PPSSPP_ARCH(ARMV7)
-	// Unused
-	if (!optimize)
-	{
-		// For backpatching on ARMv7
-		MOVW(reg, val & 0xFFFF);
-		MOVT(reg, val, true);
-		return;
-	}
-#endif
-
 	if (TryMakeOperand2_AllowInverse(val, op2, &inverse)) {
 		inverse ? MVN(reg, op2) : MOV(reg, op2);
 	} else {
-#if PPSSPP_ARCH(ARMV7)
-		// Use MOVW+MOVT for ARMv7+
-		MOVW(reg, val & 0xFFFF);
-		if(val & 0xFFFF0000)
-			MOVT(reg, val, true);
-#else
 		if (!TrySetValue_TwoOp(reg,val)) {
 			bool first = true;
 			for (int i = 0; i < 32; i += 2) {
@@ -535,7 +483,6 @@ void ARMXEmitter::MOVI2R(ARMReg reg, u32 val, bool optimize)
 //			AddNewLit(val);
 //			LDR(reg, R_PC); // To be backpatched later
 		}
-#endif
 	}
 }
 
@@ -632,9 +579,9 @@ void ARMXEmitter::FlushIcacheSection(u8 *start, u8 *end)
 #if defined(IOS)
 	// Header file says this is equivalent to: sys_icache_invalidate(start, end - start);
 	sys_cache_control(kCacheFunctionPrepareForExecution, start, end - start);
-#elif PPSSPP_PLATFORM(WINDOWS)
+#elif _WIN32
 	FlushInstructionCache(GetCurrentProcess(), start, end - start);
-#elif PPSSPP_ARCH(ARM)
+#elif _M_ARM
 
 #if defined(__clang__) || defined(__ANDROID__)
 	__clear_cache(start, end);
@@ -1501,8 +1448,8 @@ void ARMXEmitter::VLDR(ARMReg Dest, ARMReg Base, s16 offset)
 
 	_assert_msg_(JIT, (imm & 0xC03) == 0, "VLDR: Offset needs to be word aligned and small enough");
 
-	if (imm & 0xC03)
-		ERROR_LOG(JIT, "VLDR: Bad offset %08x", imm);
+    if (imm & 0xC03) {}
+		// ERROR_LOG(JIT, "VLDR: Bad offset %08x", imm);
 
 	bool single_reg = Dest < D0;
 
@@ -1529,8 +1476,12 @@ void ARMXEmitter::VSTR(ARMReg Src, ARMReg Base, s16 offset)
 
 	_assert_msg_(JIT, (imm & 0xC03) == 0, "VSTR: Offset needs to be word aligned and small enough");
 
-	if (imm & 0xC03)
-		ERROR_LOG(JIT, "VSTR: Bad offset %08x", imm);
+    if (imm & 0xC03)
+    {
+
+    }
+	
+    // ERROR_LOG(JIT, "VSTR: Bad offset %08x", imm);
 
 	bool single_reg = Src < D0;
 
@@ -1727,7 +1678,7 @@ void ARMXEmitter::VMOV(ARMReg Dest, ARMReg Src, bool high)
 void ARMXEmitter::VMOV(ARMReg Dest, ARMReg Src)
 {
 	if (Dest == Src) {
-		WARN_LOG(JIT, "VMOV %s, %s - same register", ARMRegAsString(Src), ARMRegAsString(Dest));
+		// WARN_LOG(JIT, "VMOV %s, %s - same register", ARMRegAsString(Src), ARMRegAsString(Dest));
 	}
 	if (Dest > R15)
 	{
@@ -1782,7 +1733,7 @@ void ARMXEmitter::VMOV(ARMReg Dest, ARMReg Src)
 
 	_assert_msg_(JIT, SrcSize == DestSize, "VMOV doesn't support moving different register sizes");
 	if (SrcSize != DestSize) {
-		ELOG("SrcSize: %i (%s)  DestDize: %i (%s)", SrcSize, ARMRegAsString(Src), DestSize, ARMRegAsString(Dest));
+		// ELOG("SrcSize: %i (%s)  DestDize: %i (%s)", SrcSize, ARMRegAsString(Src), DestSize, ARMRegAsString(Dest));
 	}
 
 	Dest = SubBase(Dest);

@@ -19,14 +19,14 @@
 #include <stdio.h>
 #include <string.h>
 #include "NDS.h"
-#include "ARM.h"
+#include "ARMBase.h"
 #include "CP15.h"
 
 
 // derp
 namespace NDS
 {
-extern ARM* ARM9;
+extern ARM_Base* ARM9;
 }
 
 namespace CP15
