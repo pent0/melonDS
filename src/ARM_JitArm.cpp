@@ -124,12 +124,18 @@ static u32 CodeRead32(void *userdata, u32 addr)
     return val;
 }
 
-static u32 CpRead(void *userdata, u32 id)
+static u32 CpRead(void *userdata, u8 cpnum, u32 id)
 {
-    return CP15::Read(id);
+    ARM_JITARM *jit = reinterpret_cast<ARM_JITARM*>(userdata);
+
+    if ((!jit->GetCPUNum() == 0) && cpnum == 15)
+        return CP15::Read(id);
+
+    assert(false);
+    return 0;
 }
 
-static void CpWrite(void *userdata, u32 id, u32 val)
+static void CpWrite(void *userdata, u8 cp_num, u32 id, u32 val)
 {
     return CP15::Write(id, val);
 }
@@ -138,6 +144,11 @@ static u32 GetRemainingTicks(void *userdata)
 {
     ARM_JITARM *jit = reinterpret_cast<ARM_JITARM*>(userdata);
     return jit->CyclesToRun - jit->Cycles;
+}
+
+static void Dummy(void *userdata)
+{
+    int a = 5;
 }
 
 static void AddTicks(void *userdata, u32 ticks)
@@ -185,6 +196,7 @@ ARM_JITARM::ARM_JITARM(u32 num)
     callback.get_remaining_cycles = GetRemainingTicks;
     callback.cp_read = CpRead;
     callback.cp_write = CpWrite;
+    callback.dummy = Dummy;
 
     callback.userdata = this;
 

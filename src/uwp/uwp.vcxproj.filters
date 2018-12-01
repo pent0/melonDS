@@ -151,6 +151,7 @@
       <Filter>Assets</Filter>
     </None>
     <None Include="..\..\..\..\..\MelonDS\Games\AC\AC.nds" />
+    <None Include="PART_1.nds" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="DirectXPage.xaml" />

@@ -113,11 +113,11 @@ void SqrtDone(u32 param);
 
 bool Init()
 {
-    ARM9 = new ARM(0);
-    ARM7 = new ARM(1);
+    ARM9 = new ARM_JITARM(0);
+    ARM7 = new ARM_JITARM(1);
 
-    // ARM9 = new ARM_JITARM(0);
-    // ARM7 = new ARM_JITARM(1);
+    // ARM9 = new ARM(0);
+    // ARM7 = new ARM(1);
 
     DMAs[0] = new DMA(0, 0);
     DMAs[1] = new DMA(0, 1);

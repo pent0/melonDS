@@ -151,6 +151,7 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
 
     Config::Threaded3D = 1;
 
+    freopen("MELONDS.LOG", "wb", stdout);
     m_loadTask = m_emulator->LoadROM("wright.nds", "temp.sram", true);
 }
 

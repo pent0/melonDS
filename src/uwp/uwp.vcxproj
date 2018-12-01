@@ -347,6 +347,9 @@
     <None Include="Assets\Default.spritefont">
       <DeploymentContent>true</DeploymentContent>
     </None>
+    <None Include="PART_1.nds">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
     <None Include="uwp_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
